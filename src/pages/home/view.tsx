@@ -32,18 +32,17 @@ import {
     ChartTooltipContent,
   } from "../../components/ui/chart"
   import { Separator } from "../../components/ui/separator"
-import React from "react"
   
   export const description = "A collection of health charts."
   
   export function HomeView() {
     return (
-      <div className="chart-wrapper mx-auto flex max-w-6xl flex-col flex-wrap items-start justify-center gap-6 p-6 sm:flex-row sm:p-8">
+      <div className="flex flex-col flex-wrap items-start justify-center max-w-6xl gap-6 p-6 mx-auto chart-wrapper sm:flex-row sm:p-8">
         <div className="grid w-full gap-6 sm:grid-cols-2 lg:max-w-[22rem] lg:grid-cols-1 xl:max-w-[25rem]">
           <Card
             className="lg:max-w-md" x-chunk="charts-01-chunk-0"
           >
-            <CardHeader className="space-y-0 pb-2">
+            <CardHeader className="pb-2 space-y-0">
               <CardDescription>Today</CardDescription>
               <CardTitle className="text-4xl tabular-nums">
                 12,584{" "}
@@ -191,7 +190,7 @@ import React from "react"
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="flex flex-1 items-center">
+            <CardContent className="flex items-center flex-1">
               <ChartContainer
                 config={{
                   resting: {
@@ -301,8 +300,8 @@ import React from "react"
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-              <div className="grid auto-rows-min gap-2">
-                <div className="flex items-baseline gap-1 text-2xl font-bold tabular-nums leading-none">
+              <div className="grid gap-2 auto-rows-min">
+                <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
                   12,453
                   <span className="text-sm font-normal text-muted-foreground">
                     steps/day
@@ -352,8 +351,8 @@ import React from "react"
                   </BarChart>
                 </ChartContainer>
               </div>
-              <div className="grid auto-rows-min gap-2">
-                <div className="flex items-baseline gap-1 text-2xl font-bold tabular-nums leading-none">
+              <div className="grid gap-2 auto-rows-min">
+                <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
                   10,103
                   <span className="text-sm font-normal text-muted-foreground">
                     steps/day
@@ -416,7 +415,7 @@ import React from "react"
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-row items-baseline gap-4 p-4 pt-0">
-              <div className="flex items-baseline gap-1 text-3xl font-bold tabular-nums leading-none">
+              <div className="flex items-baseline gap-1 text-3xl font-bold leading-none tabular-nums">
                 12.5
                 <span className="text-sm font-normal text-muted-foreground">
                   miles/day
@@ -562,31 +561,31 @@ import React from "react"
                 </BarChart>
               </ChartContainer>
             </CardContent>
-            <CardFooter className="flex flex-row border-t p-4">
-              <div className="flex w-full items-center gap-2">
+            <CardFooter className="flex flex-row p-4 border-t">
+              <div className="flex items-center w-full gap-2">
                 <div className="grid flex-1 auto-rows-min gap-0.5">
                   <div className="text-xs text-muted-foreground">Move</div>
-                  <div className="flex items-baseline gap-1 text-2xl font-bold tabular-nums leading-none">
+                  <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
                     562
                     <span className="text-sm font-normal text-muted-foreground">
                       kcal
                     </span>
                   </div>
                 </div>
-                <Separator orientation="vertical" className="mx-2 h-10 w-px" />
+                <Separator orientation="vertical" className="w-px h-10 mx-2" />
                 <div className="grid flex-1 auto-rows-min gap-0.5">
                   <div className="text-xs text-muted-foreground">Exercise</div>
-                  <div className="flex items-baseline gap-1 text-2xl font-bold tabular-nums leading-none">
+                  <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
                     73
                     <span className="text-sm font-normal text-muted-foreground">
                       min
                     </span>
                   </div>
                 </div>
-                <Separator orientation="vertical" className="mx-2 h-10 w-px" />
+                <Separator orientation="vertical" className="w-px h-10 mx-2" />
                 <div className="grid flex-1 auto-rows-min gap-0.5">
                   <div className="text-xs text-muted-foreground">Stand</div>
-                  <div className="flex items-baseline gap-1 text-2xl font-bold tabular-nums leading-none">
+                  <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
                     14
                     <span className="text-sm font-normal text-muted-foreground">
                       hr
@@ -597,7 +596,7 @@ import React from "react"
             </CardFooter>
           </Card>
         </div>
-        <div className="grid w-full flex-1 gap-6">
+        <div className="grid flex-1 w-full gap-6">
           <Card
             className="max-w-xs" x-chunk="charts-01-chunk-5"
           >
@@ -605,7 +604,7 @@ import React from "react"
               <div className="grid items-center gap-2">
                 <div className="grid flex-1 auto-rows-min gap-0.5">
                   <div className="text-sm text-muted-foreground">Move</div>
-                  <div className="flex items-baseline gap-1 text-xl font-bold tabular-nums leading-none">
+                  <div className="flex items-baseline gap-1 text-xl font-bold leading-none tabular-nums">
                     562/600
                     <span className="text-sm font-normal text-muted-foreground">
                       kcal
@@ -614,7 +613,7 @@ import React from "react"
                 </div>
                 <div className="grid flex-1 auto-rows-min gap-0.5">
                   <div className="text-sm text-muted-foreground">Exercise</div>
-                  <div className="flex items-baseline gap-1 text-xl font-bold tabular-nums leading-none">
+                  <div className="flex items-baseline gap-1 text-xl font-bold leading-none tabular-nums">
                     73/120
                     <span className="text-sm font-normal text-muted-foreground">
                       min
@@ -623,7 +622,7 @@ import React from "react"
                 </div>
                 <div className="grid flex-1 auto-rows-min gap-0.5">
                   <div className="text-sm text-muted-foreground">Stand</div>
-                  <div className="flex items-baseline gap-1 text-xl font-bold tabular-nums leading-none">
+                  <div className="flex items-baseline gap-1 text-xl font-bold leading-none tabular-nums">
                     8/12
                     <span className="text-sm font-normal text-muted-foreground">
                       hr
@@ -698,7 +697,7 @@ import React from "react"
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-row items-baseline gap-4 p-4 pt-2">
-              <div className="flex items-baseline gap-2 text-3xl font-bold tabular-nums leading-none">
+              <div className="flex items-baseline gap-2 text-3xl font-bold leading-none tabular-nums">
                 1,254
                 <span className="text-sm font-normal text-muted-foreground">
                   kcal/day
@@ -774,7 +773,7 @@ import React from "react"
           <Card
             className="max-w-xs" x-chunk="charts-01-chunk-7"
           >
-            <CardHeader className="space-y-0 pb-0">
+            <CardHeader className="pb-0 space-y-0">
               <CardDescription>Time in Bed</CardDescription>
               <CardTitle className="flex items-baseline gap-1 text-4xl tabular-nums">
                 8

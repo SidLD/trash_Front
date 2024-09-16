@@ -1,13 +1,11 @@
-import React from 'react'
-import { useState } from 'react'
-import { Home } from './pages/home'
+
+import LoginForm from './pages/login/_components/login'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
-      <Home />
+      <LoginForm />
     </>
   )
 }
