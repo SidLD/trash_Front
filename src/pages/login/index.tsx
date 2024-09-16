@@ -1,5 +1,5 @@
+import LoginView from "./view"
 
-import { LoginView } from './view'
 
 export const Login = () => {
   return <LoginView />
