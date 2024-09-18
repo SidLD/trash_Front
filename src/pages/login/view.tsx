@@ -33,7 +33,7 @@ export default function LoginView() {
       toast({
         title: "Error",
         variant: "destructive",
-        description: `${error.response.data.message}`,
+        description: `${error.response.data.data}`,
       })
     }
     // navigate('/dashboard')
