@@ -5,10 +5,10 @@ export const auth = {
     },
     storeToken(token: string) {
       this.clear();
-      localStorage.setItem('danti_token', `Bearer ${token}`);
+      localStorage.setItem('trash_token', `Bearer ${token}`);
     },
     getToken() {
-      return localStorage.getItem('danti_token');
+      return localStorage.getItem('trash_token');
     },
     getExpiration() {
       const token = this.getToken();
@@ -42,7 +42,7 @@ export const auth = {
     },
     
     clear() {
-      localStorage.removeItem('danti_token')
+      localStorage.removeItem('trash_token')
       window.location.reload();
     },
   };

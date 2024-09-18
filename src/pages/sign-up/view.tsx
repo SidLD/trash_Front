@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Mountain } from 'lucide-react'
+import { RegisterUserType } from '@/lib/interface'
+import { register } from '@/lib/api'
+import { Toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/use-toast'
 
 export default function SignUpView() {
   const [email, setEmail] = useState('')
@@ -13,15 +16,31 @@ export default function SignUpView() {
   const [username, setUsername] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [role, setRole] = useState('')
-  const navigate = useNavigate()
+  const [role, setRole] = useState<'ADMIN'|'CONTRIBUTOR' >('CONTRIBUTOR')
+  const { toast } = useToast()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically handle the login logic
-    console.log({ email, password, username, firstName, lastName, role })
-    // For demonstration, we'll just navigate to a dashboard
-    navigate('/dashboard')
+    try {
+      const payload:RegisterUserType = {
+        email, password, username, firstName, lastName, role,
+        _id: undefined
+      }
+      const {data} = await register(payload) as unknown as any
+      if(data){
+        toast({
+          title: "Success",
+          description: "Register Success, Wait For Approval",
+        })
+      }
+    } catch (error:any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: `${error.response.data.error}`,
+      })
+    }
+    // navigate('/dashboard')
   }
 
   return (
@@ -101,23 +120,33 @@ export default function SignUpView() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
-                <Select onValueChange={setRole} required>
+                <Select onValueChange={(e) => {
+                  switch (e) {
+                    case "ADMIN":
+                      setRole('ADMIN')
+                      break;
+                    default:
+                      setRole('CONTRIBUTOR')
+                      break;
+                  }
+                }} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="contributor">Contributor</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="CONTRIBUTOR">Contributor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full">Login</Button>
+              <Button type="submit" className="w-full">Sign Up</Button>
             </CardFooter>
           </form>
         </Card>
       </div>
+      <Toaster  />
     </div>
   )
 }

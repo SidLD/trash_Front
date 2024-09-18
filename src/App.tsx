@@ -5,7 +5,7 @@ import routers from "./modules/router"
 function App() {
   return (
     <RouterProvider
-    router={routers}
+      router={routers}
   />
   )
 }

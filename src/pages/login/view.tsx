@@ -1,22 +1,42 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Mountain } from 'lucide-react'
+import { login } from '@/lib/api'
+import { LoginType } from '@/lib/interface'
+import { auth } from '@/lib/services'
+import { Toaster } from '@/components/ui/toaster'
+import { useToast } from '@/hooks/use-toast'
 
 export default function LoginView() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const navigate = useNavigate()
+  const { toast } = useToast()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically handle the login logic
-    console.log({ username, password })
-    // For demonstration, we'll just navigate to a dashboard
-    navigate('/dashboard')
+    try {
+      const payload:LoginType = {email, password}
+      const {data} = await login(payload) as unknown as any
+      toast({
+        title: "Success",
+        description: "Welcome",
+      })
+      if(data){
+        auth.storeToken(data.token)
+        setEmail('')
+        setPassword('')
+      }
+    } catch (error:any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: `${error.response.data.message}`,
+      })
+    }
+    // navigate('/dashboard')
   }
 
   return (
@@ -43,10 +63,10 @@ export default function LoginView() {
                 <Label htmlFor="username">Username</Label>
                 <Input 
                   id="username" 
-                  type="text" 
+                  type="email" 
                   placeholder="Enter your username" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -68,6 +88,8 @@ export default function LoginView() {
           </form>
         </Card>
       </div>
+
+      <Toaster  />
     </div>
   )
 }

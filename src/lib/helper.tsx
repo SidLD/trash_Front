@@ -29,14 +29,11 @@ export const fetchCity = async (code:string) => {
 export const getRoleRoutePath = ():string => {
     const role = auth.getRole()
     switch (role) {
-        case "admin":
-            return "/dashboard"
-            break;
-        case "doctor":
-            return "/record"
+        case "ADMIN":
+            return "/admin/"
             break;
         default:
-            return "/appointment"
+            return "/contributor/"
             break;
     }
 }
