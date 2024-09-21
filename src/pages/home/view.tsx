@@ -32,10 +32,22 @@ import {
     ChartTooltipContent,
   } from "../../components/ui/chart"
   import { Separator } from "../../components/ui/separator"
-  
+  import { io } from 'socket.io-client';
+import { useEffect } from "react";
   export const description = "A collection of health charts."
   
+    //Need to add this before the component decleration
+  const socket = io(`${import.meta.env.VITE_API_URL}`,{
+    transports: ["websocket"] });
+         
   export function HomeView() {
+    useEffect(() => {
+      if(socket){
+        socket.on('update-data', (data) => {
+          console.log(data)
+        })
+      }
+    }, [socket])
     return (
       <div className="flex flex-col flex-wrap items-start justify-center max-w-6xl gap-6 p-6 mx-auto chart-wrapper sm:flex-row sm:p-8">
         <div className="grid w-full gap-6 sm:grid-cols-2 lg:max-w-[22rem] lg:grid-cols-1 xl:max-w-[25rem]">
