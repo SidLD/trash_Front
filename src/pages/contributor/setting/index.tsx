@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -18,15 +17,18 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from '@/hooks/use-toast'
+import { getUserSetting, updateUserSetting } from '@/lib/api'
+import { UserType } from '@/lib/interface'
 
+// Schema with optional password fields
 const userSettingsSchema = z.object({
   username: z.string().min(2, 'Username must be at least 2 characters.').max(30, 'Username must not exceed 30 characters.'),
   email: z.string().email('Invalid email address.'),
   firstName: z.string().min(1, 'First name is required.'),
   lastName: z.string().min(1, 'Last name is required.'),
   middleName: z.string().optional(),
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  currentPassword: z.string().optional(), // Make current password optional
+  newPassword: z.string().optional(),
   confirmPassword: z.string().optional(),
 }).refine((data) => {
   if (data.newPassword || data.confirmPassword) {
@@ -40,7 +42,6 @@ const userSettingsSchema = z.object({
 
 type UserSettingsFormValues = z.infer<typeof userSettingsSchema>
 
-// This would typically come from your auth system
 const initialData = {
   username: "johndoe",
   email: "johndoe@example.com",
@@ -52,29 +53,50 @@ const initialData = {
   confirmPassword: "",
 }
 
-export default function AdminSetting() {
+export default function ContributorSetting() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const {toast} = useToast()
+  const { toast } = useToast()
   const form = useForm<UserSettingsFormValues>({
     resolver: zodResolver(userSettingsSchema),
     defaultValues: initialData,
   })
 
   async function onSubmit(data: UserSettingsFormValues) {
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
-      toast({
-        title: "Settings updated",
-        description: "Your settings have been successfully updated.",
-      })
-      if (data.newPassword) {
-        form.reset({ ...data, currentPassword: "", newPassword: "", confirmPassword: "" })
-      }
-    }, 2000)
+    try {
+      setIsLoading(true)
+      await updateUserSetting(data);
+      setTimeout(() => {
+        setIsLoading(false)
+        toast({
+          title: "Settings updated",
+          description: "Your settings have been successfully updated.",
+        })
+        // Reset form fields, except for the username, email, etc.
+        if (data.newPassword) {
+          form.reset({ ...data, currentPassword: "", newPassword: "", confirmPassword: "" })
+        }
+      }, 2000)
+    } catch (error) {
+      
+    }
   }
 
-  
+  useEffect(() => {
+      const fetchUserSetting = async () =>  {
+       try {
+        const {data} = await getUserSetting({}) as unknown as any;
+        const userData:UserType = data;
+        form.setValue('firstName', userData.firstName)
+        form.setValue('middleName', userData.middleName)
+        form.setValue('lastName', userData.lastName)
+        form.setValue('username', userData.username)
+        form.setValue('email', userData.email)
+       } catch (error) {
+        console.log(error)
+       }
+      }
+      fetchUserSetting()
+  }, [])
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -96,9 +118,6 @@ export default function AdminSetting() {
                   <FormControl>
                     <Input placeholder="johndoe" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    This is your public display name.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -112,9 +131,6 @@ export default function AdminSetting() {
                   <FormControl>
                     <Input placeholder="johndoe@example.com" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    This is the email address you use to log in.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -169,9 +185,6 @@ export default function AdminSetting() {
                     <FormControl>
                       <Input type="password" placeholder="Enter your current password" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Enter your current password to make changes.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -185,9 +198,6 @@ export default function AdminSetting() {
                     <FormControl>
                       <Input type="password" placeholder="Enter your new password" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Leave blank if you don't want to change your password. New password must be at least 8 characters long.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -201,9 +211,6 @@ export default function AdminSetting() {
                     <FormControl>
                       <Input type="password" placeholder="Confirm your new password" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Re-enter your new password to confirm.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

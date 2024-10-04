@@ -1,6 +1,6 @@
 import axios from "axios";;
 import { dataHeader } from "./helper";
-import { RegisterUserType, LoginType } from "./interface";
+import { RegisterUserType, LoginType, FoodWasteType } from "./interface";
 console.log(import.meta.env.VITE_API_URL)
 export const login = (data:LoginType) => {
     return new Promise((resolve, reject) => {
@@ -70,5 +70,94 @@ export const deleteUser = (data:any) => {
           reject(err);
         });
     });
-  };
+};
+
+
+//Food Waste
+export const createRecord = (data:FoodWasteType) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .post(`${import.meta.env.VITE_API_URL}food-waste`, data, dataHeader())
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
+
   
+export const getRecords = (data:any) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}food-waste`, {
+          data, ...dataHeader()
+      })
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
+
+export const updateRecordStatus = (id: string, data:any) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .put(`${import.meta.env.VITE_API_URL}food-waste/${id}/status`, data, dataHeader())
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
+
+
+//Stat
+export const getStat = (data:any) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}stat`, {
+          data, ...dataHeader()
+      })
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
+
+//Setting
+export const getUserSetting = (data:any) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}user/setting`, {
+          data, ...dataHeader()
+      })
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
+
+export const updateUserSetting = (data:any) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .put(`${import.meta.env.VITE_API_URL}user/status`, data, dataHeader())
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};

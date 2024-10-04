@@ -62,8 +62,8 @@ export default function DashboardLayout() {
 
   const NavItems = () => (
     <>
-      {links.filter(link => link.roles.includes(auth.getRole())).map(link => {
-        return <li className="mb-4 md:mb-0 md:mr-6">
+      {links.filter((link) => link.roles.includes(auth.getRole())).map((link, index) => {
+        return <li key={index} className="mb-4 md:mb-0 md:mr-6">
         <Link to={link.link} className="flex items-center space-x-2 transition-colors hover:text-gray-300">
           {link.icon}
           <span>{link.title}</span>
