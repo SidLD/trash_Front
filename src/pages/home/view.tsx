@@ -184,8 +184,7 @@ export function HomeView() {
   const getPossibleFactors = () => {
     const factors = new Set<string>()
     foodWasteData.forEach(item => {
-      factors.add(item.reasonForWaste)
-      factors.add(item.environmentalConditions)
+      factors.add(item.relevantEvent)
     })
     return Array.from(factors).filter(factor => factor !== 'None')
   }
@@ -196,7 +195,7 @@ export function HomeView() {
       <h1 className="mb-4 text-2xl font-bold">Food Waste Dashboard</h1>
       {selectedChart ? (
         <div ref={chartRef} className="space-y-8">
-          <div className="h-[600px]">
+          <div >
             {renderChart(selectedChart)}
           </div>
           <Card>
