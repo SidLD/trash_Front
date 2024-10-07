@@ -1,894 +1,238 @@
 
-import {
-    Area,
-    AreaChart,
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Label,
-    LabelList,
-    Line,
-    LineChart,
-    PolarAngleAxis,
-    RadialBar,
-    RadialBarChart,
-    Rectangle,
-    ReferenceLine,
-    XAxis,
-    YAxis,
-  } from "recharts"
-  
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-  } from "../../components/ui/card"
-  import {
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-  } from "../../components/ui/chart"
-  import { Separator } from "../../components/ui/separator"
-  import { io } from 'socket.io-client';
-import { useEffect } from "react";
-  export const description = "A collection of health charts."
-  
-    //Need to add this before the component decleration
-  const socket = io(`${import.meta.env.VITE_API_URL}`,{
-    transports: ["websocket"] });
-         
-  export function HomeView() {
-    useEffect(() => {
-      if(socket){
-        socket.on('update-data', (data) => {
-          console.log(data)
-        })
+import { createContext, useCallback, useEffect, useRef, useState } from 'react'
+import { io } from 'socket.io-client';
+import { TableChart } from './_components/TableChart'
+import { CustomPieChart } from './_components/CustomPieChart'
+import { CustomLineChart1 } from './_components/CustomLineChart1'
+import { CustomLineChart2 } from './_components/CustomLineChart2'
+import { CustomCurveChart } from './_components/CostomCurveChart'
+import { CustomCurveChart2 } from './_components/CostomCurveChart2'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+export interface FoodWasteData {
+  id: string;
+  stallNumber: number;
+  dateOfWaste: string;
+  foodCategory: string;
+  dishesWasted: string;
+  quantity: number;
+  cost: number;
+  reasonForWaste: string;
+  foodIngredients: string;
+  temperatureFactor: string;
+  mealType: string;
+  stageOfWaste: string;
+  wasteDistribution: string;
+  preventable: string;
+  disposalMethod: string;
+  environmentalConditions: string;
+  relevantEvent: string;
+  additionalComments: string;
+}
+
+interface HomeContextType {
+  foodWasteData: FoodWasteData[];
+  pieChartData: { name: string; value: number }[];
+  foodCategoryData: { name: string; value: number }[];
+  dishesWastedData: { name: string; value: number }[];
+  stageOfWasteData: { name: string; value: number }[];
+  lineChartData: { date: string; quantity: number; cost: number }[];
+  scatterChartData: { x: number; y: number }[];
+  COLORS: string[];
+}
+
+export const HomeContext = createContext<HomeContextType>({
+  foodWasteData: [],
+  pieChartData: [],
+  foodCategoryData: [],
+  dishesWastedData: [],
+  stageOfWasteData: [],
+  lineChartData: [],
+  scatterChartData: [],
+  COLORS: [],
+})
+
+const foodWasteData: FoodWasteData[] = [
+  { id: "24-0001", stallNumber: 1, dateOfWaste: "10-2-2024", foodCategory: "Rice, Vegetables", dishesWasted: "Adobo, Tinola", quantity: 1.5, cost: 150, reasonForWaste: "Spoilage, Over-preparation", foodIngredients: "Coconut Milk, Milk", temperatureFactor: "Hot", mealType: "Lunch", stageOfWaste: "Consumer Stage", wasteDistribution: "More on Consumer Side", preventable: "Yes", disposalMethod: "Thrown Away & Collected", environmentalConditions: "Power Outage", relevantEvent: "University Intramurals", additionalComments: "Food wasted due to heat" },
+  { id: "24-0002", stallNumber: 2, dateOfWaste: "10-1-2024", foodCategory: "Meat, Seafood", dishesWasted: "Menudo, Paksiw", quantity: 2, cost: 250, reasonForWaste: "Expired, Contamination", foodIngredients: "Milk", temperatureFactor: "Cold", mealType: "Dinner", stageOfWaste: "Retail Stage", wasteDistribution: "50% Consumer & 50% Food Stalls", preventable: "No", disposalMethod: "Used for Animal Feed", environmentalConditions: "Refrigeration Issues", relevantEvent: "City Festival", additionalComments: "" },
+  { id: "24-0003", stallNumber: 3, dateOfWaste: "9-30-2024", foodCategory: "Baked Goods, Drinks", dishesWasted: "None", quantity: 0.7, cost: 50, reasonForWaste: "Improper Storage, Spoilage", foodIngredients: "None", temperatureFactor: "Normal", mealType: "Merienda", stageOfWaste: "Consumer Stage", wasteDistribution: "More on Food Stalls Side", preventable: "Yes", disposalMethod: "Thrown Away & Collected", environmentalConditions: "None", relevantEvent: "Acquaintance Party", additionalComments: "Too much stock left unused" },
+  { id: "24-0004", stallNumber: 4, dateOfWaste: "9-28-2024", foodCategory: "Fruits, Meat", dishesWasted: "Afritada, Caldereta", quantity: 3, cost: 300, reasonForWaste: "Spoilage", foodIngredients: "None", temperatureFactor: "Hot", mealType: "Lunch", stageOfWaste: "Retail Stage", wasteDistribution: "More on Food Stalls Side", preventable: "No", disposalMethod: "Composted", environmentalConditions: "Spoilage due to Weather", relevantEvent: "Foundation Day", additionalComments: "Leftovers from event" },
+  { id: "24-0005", stallNumber: 5, dateOfWaste: "9-27-2024", foodCategory: "Rice, Vegetables", dishesWasted: "Pinakbet, Pakbet", quantity: 1.8, cost: 180, reasonForWaste: "Over-preparation, Spoilage", foodIngredients: "None", temperatureFactor: "Normal", mealType: "Lunch", stageOfWaste: "Consumer Stage", wasteDistribution: "More on Consumer Side", preventable: "Yes", disposalMethod: "Used for Animal Feed", environmentalConditions: "None", relevantEvent: "Charity Events", additionalComments: "Large batch prepared unnecessarily" },
+  { id: "24-0006", stallNumber: 6, dateOfWaste: "9-25-2024", foodCategory: "Rice, Meat, Drinks", dishesWasted: "Bicol Express, Dinuguan", quantity: 2.5, cost: 275, reasonForWaste: "Over-preparation", foodIngredients: "Coconut Milk", temperatureFactor: "Cold", mealType: "Dinner", stageOfWaste: "Consumer Stage", wasteDistribution: "50% Consumer & 50% Food Stalls", preventable: "No", disposalMethod: "Thrown Away & Collected", environmentalConditions: "Refrigeration Issues", relevantEvent: "University Intramurals", additionalComments: "Cooling system failed" },
+  { id: "24-0007", stallNumber: 7, dateOfWaste: "9-24-2024", foodCategory: "Meat, Processed Foods", dishesWasted: "Pork Steak, Sari-Sari", quantity: 1.2, cost: 100, reasonForWaste: "Spoilage", foodIngredients: "Milk", temperatureFactor: "Hot", mealType: "Dinner", stageOfWaste: "Retail Stage", wasteDistribution: "More on Food Stalls Side", preventable: "No", disposalMethod: "Thrown Away & Collected", environmentalConditions: "Spoilage due to Weather", relevantEvent: "Acquaintance Party", additionalComments: "Overestimated demand" },
+  { id: "24-0008", stallNumber: 8, dateOfWaste: "9-23-2024", foodCategory: "Vegetables, Fruits, Meat", dishesWasted: "Afritada, Tinola", quantity: 2, cost: 200, reasonForWaste: "Contamination", foodIngredients: "None", temperatureFactor: "Normal", mealType: "Lunch", stageOfWaste: "Consumer Stage", wasteDistribution: "More on Consumer Side", preventable: "Yes", disposalMethod: "Composted", environmentalConditions: "None", relevantEvent: "City Festival", additionalComments: "Left exposed during event" },
+  { id: "24-0009", stallNumber: 9, dateOfWaste: "9-22-2024", foodCategory: "Baked Goods, Drinks", dishesWasted: "None", quantity: 0.5, cost: 40, reasonForWaste: "Quality Issues, Over-preparation", foodIngredients: "None", temperatureFactor: "Hot", mealType: "Merienda", stageOfWaste: "Consumer Stage", wasteDistribution: "More on Consumer Side", preventable: "Yes", disposalMethod: "Used for Animal Feed", environmentalConditions: "None", relevantEvent: "University Intramurals", additionalComments: "Prepared too many pastries" },
+  { id: "24-0010", stallNumber: 10, dateOfWaste: "9-21-2024", foodCategory: "Meat, Seafood, Processed Foods", dishesWasted: "Caldereta, Paksiw", quantity: 1.7, cost: 200, reasonForWaste: "Spoilage", foodIngredients: "None", temperatureFactor: "Cold", mealType: "Dinner", stageOfWaste: "Retail Stage", wasteDistribution: "50% Consumer & 50% Food Stalls", preventable: "No", disposalMethod: "Thrown Away & Collected", environmentalConditions: "Refrigeration Issues", relevantEvent: "Foundation Day", additionalComments: "Refrigerators failed overnight" },
+]
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A4DE6C', '#D0ED57', '#FFA07A', '#20B2AA']
+
+const preparePieChartData = (data: FoodWasteData[]): { name: string; value: number }[] => {
+  const dishesWastedData = data.reduce((acc: { [key: string]: number }, curr) => {
+    const dishes = curr.dishesWasted.split(', ')
+    dishes.forEach(dish => {
+      if (dish !== 'None') {
+        acc[dish] = (acc[dish] || 0) + 1
       }
-    }, [socket])
-    return (
-      <div className="flex flex-col flex-wrap items-start justify-center max-w-6xl gap-6 p-6 mx-auto chart-wrapper sm:flex-row sm:p-8">
-        <div className="grid w-full gap-6 sm:grid-cols-2 lg:max-w-[22rem] lg:grid-cols-1 xl:max-w-[25rem]">
-          <Card
-            className="lg:max-w-md" x-chunk="charts-01-chunk-0"
-          >
-            <CardHeader className="pb-2 space-y-0">
-              <CardDescription>Today</CardDescription>
-              <CardTitle className="text-4xl tabular-nums">
-                12,584{" "}
-                <span className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
-                  steps
-                </span>
-              </CardTitle>
+    })
+    return acc
+  }, {})
+  return Object.entries(dishesWastedData).map(([name, value]) => ({ name, value }))
+}
+
+const prepareBarChartData = (data: FoodWasteData[], key: keyof FoodWasteData): { name: string; value: number }[] => {
+  const groupedData = data.reduce((acc: { [key: string]: number }, curr) => {
+    const categories = (curr[key] as string).split(', ')
+    categories.forEach(category => {
+      acc[category] = (acc[category] || 0) + curr.quantity
+    })
+    return acc
+  }, {})
+  return Object.entries(groupedData).map(([name, value]) => ({ name, value }))
+}
+
+const prepareLineChartData = (data: FoodWasteData[]): { date: string; quantity: number; cost: number }[] => {
+  return data.map(item => ({
+    date: item.dateOfWaste,
+    quantity: item.quantity,
+    cost: item.cost
+  })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+}
+
+const prepareScatterChartData = (data: FoodWasteData[]): { x: number; y: number }[] => {
+  return data.map(item => ({
+    x: item.cost,
+    y: item.quantity
+  }))
+}
+
+type ChartType = 'table' | 'pie' | 'line1' | 'line2' | 'curve1' | 'curve2' | null;
+
+export function HomeView() {
+  const [selectedChart, setSelectedChart] = useState<ChartType>(null)
+
+  useEffect(() => {
+    const socket = io(`${import.meta.env.VITE_API_URL}`, {
+      transports: ["websocket"]
+    })
+
+    socket.on('update-data', (data) => {
+      console.log(data)
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
+
+  const pieChartData = preparePieChartData(foodWasteData)
+  const foodCategoryData = prepareBarChartData(foodWasteData, 'foodCategory')
+  const dishesWastedData = prepareBarChartData(foodWasteData, 'dishesWasted')
+  const stageOfWasteData = prepareBarChartData(foodWasteData, 'stageOfWaste')
+  const lineChartData = prepareLineChartData(foodWasteData)
+  const scatterChartData = prepareScatterChartData(foodWasteData)
+
+  const contextValue: HomeContextType = {
+    foodWasteData,
+    pieChartData,
+    foodCategoryData,
+    dishesWastedData,
+    stageOfWasteData,
+    lineChartData,
+    scatterChartData,
+    COLORS
+  }
+
+  const chartRef = useRef<HTMLDivElement>(null)
+  const handleChartClick = useCallback((chartType: ChartType) => {
+    setSelectedChart(chartType)
+  }, [])
+
+  const handleOutsideClick = useCallback((event: MouseEvent) => {
+    if (chartRef.current && !chartRef.current.contains(event.target as Node)) {
+      setSelectedChart(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+    }
+  }, [handleOutsideClick])
+
+  const renderChart = (chartType: ChartType) => {
+    switch (chartType) {
+      case 'table':
+        return <TableChart onClick={() => handleChartClick('table')} />
+      case 'pie':
+        return <CustomPieChart onClick={() => handleChartClick('pie')} />
+      case 'line1':
+        return <CustomLineChart1 onClick={() => handleChartClick('line1')} />
+      case 'line2':
+        return <CustomLineChart2 onClick={() => handleChartClick('line2')} />
+      case 'curve1':
+        return <CustomCurveChart onClick={() => handleChartClick('curve1')} />
+      case 'curve2':
+        return <CustomCurveChart2 onClick={() => handleChartClick('curve2')} />
+      default:
+        return null
+    }
+  }
+
+  const getPossibleFactors = () => {
+    const factors = new Set<string>()
+    foodWasteData.forEach(item => {
+      factors.add(item.reasonForWaste)
+      factors.add(item.environmentalConditions)
+    })
+    return Array.from(factors).filter(factor => factor !== 'None')
+  }
+  
+  return (
+    <HomeContext.Provider value={contextValue}>
+    <div className="container p-4 mx-auto">
+      <h1 className="mb-4 text-2xl font-bold">Food Waste Dashboard</h1>
+      {selectedChart ? (
+        <div ref={chartRef} className="space-y-8">
+          <div className="h-[600px]">
+            {renderChart(selectedChart)}
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Possible Factors</CardTitle>
+              <CardDescription>Factors contributing to food waste</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer
-                config={{
-                  steps: {
-                    label: "Steps",
-                    color: "hsl(var(--chart-1))",
-                  },
-                }}
-              >
-                <BarChart
-                  accessibilityLayer
-                  margin={{
-                    left: -4,
-                    right: -4,
-                  }}
-                  data={[
-                    {
-                      date: "2024-01-01",
-                      steps: 2000,
-                    },
-                    {
-                      date: "2024-01-02",
-                      steps: 2100,
-                    },
-                    {
-                      date: "2024-01-03",
-                      steps: 2200,
-                    },
-                    {
-                      date: "2024-01-04",
-                      steps: 1300,
-                    },
-                    {
-                      date: "2024-01-05",
-                      steps: 1400,
-                    },
-                    {
-                      date: "2024-01-06",
-                      steps: 2500,
-                    },
-                    {
-                      date: "2024-01-07",
-                      steps: 1600,
-                    },
-                  ]}
-                >
-                  <Bar
-                    dataKey="steps"
-                    fill="var(--color-steps)"
-                    radius={5}
-                    fillOpacity={0.6}
-                    activeBar={<Rectangle fillOpacity={0.8} />}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={4}
-                    tickFormatter={(value) => {
-                      return new Date(value).toLocaleDateString("en-US", {
-                        weekday: "short",
-                      })
-                    }}
-                  />
-                  <ChartTooltip
-                    defaultIndex={2}
-                    content={
-                      <ChartTooltipContent
-                        hideIndicator
-                        labelFormatter={(value) => {
-                          return new Date(value).toLocaleDateString("en-US", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })
-                        }}
-                      />
-                    }
-                    cursor={false}
-                  />
-                  <ReferenceLine
-                    y={1200}
-                    stroke="hsl(var(--muted-foreground))"
-                    strokeDasharray="3 3"
-                    strokeWidth={1}
-                  >
-                    <Label
-                      position="insideBottomLeft"
-                      value="Average Steps"
-                      offset={10}
-                      fill="hsl(var(--foreground))"
-                    />
-                    <Label
-                      position="insideTopLeft"
-                      value="12,343"
-                      className="text-lg"
-                      fill="hsl(var(--foreground))"
-                      offset={10}
-                      startOffset={100}
-                    />
-                  </ReferenceLine>
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-            <CardFooter className="flex-col items-start gap-1">
-              <CardDescription>
-                Over the past 7 days, you have walked{" "}
-                <span className="font-medium text-foreground">53,305</span> steps.
-              </CardDescription>
-              <CardDescription>
-                You need{" "}
-                <span className="font-medium text-foreground">12,584</span> more
-                steps to reach your goal.
-              </CardDescription>
-            </CardFooter>
-          </Card>
-          <Card
-            className="flex flex-col lg:max-w-md" x-chunk="charts-01-chunk-1"
-          >
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2 [&>div]:flex-1">
-              <div>
-                <CardDescription>Resting HR</CardDescription>
-                <CardTitle className="flex items-baseline gap-1 text-4xl tabular-nums">
-                  62
-                  <span className="text-sm font-normal tracking-normal text-muted-foreground">
-                    bpm
-                  </span>
-                </CardTitle>
-              </div>
-              <div>
-                <CardDescription>Variability</CardDescription>
-                <CardTitle className="flex items-baseline gap-1 text-4xl tabular-nums">
-                  35
-                  <span className="text-sm font-normal tracking-normal text-muted-foreground">
-                    ms
-                  </span>
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="flex items-center flex-1">
-              <ChartContainer
-                config={{
-                  resting: {
-                    label: "Resting",
-                    color: "hsl(var(--chart-1))",
-                  },
-                }}
-                className="w-full"
-              >
-                <LineChart
-                  accessibilityLayer
-                  margin={{
-                    left: 14,
-                    right: 14,
-                    top: 10,
-                  }}
-                  data={[
-                    {
-                      date: "2024-01-01",
-                      resting: 62,
-                    },
-                    {
-                      date: "2024-01-02",
-                      resting: 72,
-                    },
-                    {
-                      date: "2024-01-03",
-                      resting: 35,
-                    },
-                    {
-                      date: "2024-01-04",
-                      resting: 62,
-                    },
-                    {
-                      date: "2024-01-05",
-                      resting: 52,
-                    },
-                    {
-                      date: "2024-01-06",
-                      resting: 62,
-                    },
-                    {
-                      date: "2024-01-07",
-                      resting: 70,
-                    },
-                  ]}
-                >
-                  <CartesianGrid
-                    strokeDasharray="4 4"
-                    vertical={false}
-                    stroke="hsl(var(--muted-foreground))"
-                    strokeOpacity={0.5}
-                  />
-                  <YAxis hide domain={["dataMin - 10", "dataMax + 10"]} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => {
-                      return new Date(value).toLocaleDateString("en-US", {
-                        weekday: "short",
-                      })
-                    }}
-                  />
-                  <Line
-                    dataKey="resting"
-                    type="natural"
-                    fill="var(--color-resting)"
-                    stroke="var(--color-resting)"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{
-                      fill: "var(--color-resting)",
-                      stroke: "var(--color-resting)",
-                      r: 4,
-                    }}
-                  />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        indicator="line"
-                        labelFormatter={(value) => {
-                          return new Date(value).toLocaleDateString("en-US", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })
-                        }}
-                      />
-                    }
-                    cursor={false}
-                  />
-                </LineChart>
-              </ChartContainer>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Factor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getPossibleFactors().map((factor, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{factor}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
-        <div className="grid w-full flex-1 gap-6 lg:max-w-[20rem]">
-          <Card
-            className="max-w-xs" x-chunk="charts-01-chunk-2"
-          >
-            <CardHeader>
-              <CardTitle>Progress</CardTitle>
-              <CardDescription>
-                You're average more steps a day this year than last year.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="grid gap-2 auto-rows-min">
-                <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
-                  12,453
-                  <span className="text-sm font-normal text-muted-foreground">
-                    steps/day
-                  </span>
-                </div>
-                <ChartContainer
-                  config={{
-                    steps: {
-                      label: "Steps",
-                      color: "hsl(var(--chart-1))",
-                    },
-                  }}
-                  className="aspect-auto h-[32px] w-full"
-                >
-                  <BarChart
-                    accessibilityLayer
-                    layout="vertical"
-                    margin={{
-                      left: 0,
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
-                    }}
-                    data={[
-                      {
-                        date: "2024",
-                        steps: 12435,
-                      },
-                    ]}
-                  >
-                    <Bar
-                      dataKey="steps"
-                      fill="var(--color-steps)"
-                      radius={4}
-                      barSize={32}
-                    >
-                      <LabelList
-                        position="insideLeft"
-                        dataKey="date"
-                        offset={8}
-                        fontSize={12}
-                        fill="white"
-                      />
-                    </Bar>
-                    <YAxis dataKey="date" type="category" tickCount={1} hide />
-                    <XAxis dataKey="steps" type="number" hide />
-                  </BarChart>
-                </ChartContainer>
-              </div>
-              <div className="grid gap-2 auto-rows-min">
-                <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
-                  10,103
-                  <span className="text-sm font-normal text-muted-foreground">
-                    steps/day
-                  </span>
-                </div>
-                <ChartContainer
-                  config={{
-                    steps: {
-                      label: "Steps",
-                      color: "hsl(var(--muted))",
-                    },
-                  }}
-                  className="aspect-auto h-[32px] w-full"
-                >
-                  <BarChart
-                    accessibilityLayer
-                    layout="vertical"
-                    margin={{
-                      left: 0,
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
-                    }}
-                    data={[
-                      {
-                        date: "2023",
-                        steps: 10103,
-                      },
-                    ]}
-                  >
-                    <Bar
-                      dataKey="steps"
-                      fill="var(--color-steps)"
-                      radius={4}
-                      barSize={32}
-                    >
-                      <LabelList
-                        position="insideLeft"
-                        dataKey="date"
-                        offset={8}
-                        fontSize={12}
-                        fill="hsl(var(--muted-foreground))"
-                      />
-                    </Bar>
-                    <YAxis dataKey="date" type="category" tickCount={1} hide />
-                    <XAxis dataKey="steps" type="number" hide />
-                  </BarChart>
-                </ChartContainer>
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className="max-w-xs" x-chunk="charts-01-chunk-3"
-          >
-            <CardHeader className="p-4 pb-0">
-              <CardTitle>Walking Distance</CardTitle>
-              <CardDescription>
-                Over the last 7 days, your distance walked and run was 12.5 miles
-                per day.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-row items-baseline gap-4 p-4 pt-0">
-              <div className="flex items-baseline gap-1 text-3xl font-bold leading-none tabular-nums">
-                12.5
-                <span className="text-sm font-normal text-muted-foreground">
-                  miles/day
-                </span>
-              </div>
-              <ChartContainer
-                config={{
-                  steps: {
-                    label: "Steps",
-                    color: "hsl(var(--chart-1))",
-                  },
-                }}
-                className="ml-auto w-[72px]"
-              >
-                <BarChart
-                  accessibilityLayer
-                  margin={{
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                  }}
-                  data={[
-                    {
-                      date: "2024-01-01",
-                      steps: 2000,
-                    },
-                    {
-                      date: "2024-01-02",
-                      steps: 2100,
-                    },
-                    {
-                      date: "2024-01-03",
-                      steps: 2200,
-                    },
-                    {
-                      date: "2024-01-04",
-                      steps: 1300,
-                    },
-                    {
-                      date: "2024-01-05",
-                      steps: 1400,
-                    },
-                    {
-                      date: "2024-01-06",
-                      steps: 2500,
-                    },
-                    {
-                      date: "2024-01-07",
-                      steps: 1600,
-                    },
-                  ]}
-                >
-                  <Bar
-                    dataKey="steps"
-                    fill="var(--color-steps)"
-                    radius={2}
-                    fillOpacity={0.2}
-                    activeIndex={6}
-                    activeBar={<Rectangle fillOpacity={0.8} />}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={4}
-                    hide
-                  />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-          <Card
-            className="max-w-xs" x-chunk="charts-01-chunk-4"
-          >
-            <CardContent className="flex gap-4 p-4 pb-2">
-              <ChartContainer
-                config={{
-                  move: {
-                    label: "Move",
-                    color: "hsl(var(--chart-1))",
-                  },
-                  stand: {
-                    label: "Stand",
-                    color: "hsl(var(--chart-2))",
-                  },
-                  exercise: {
-                    label: "Exercise",
-                    color: "hsl(var(--chart-3))",
-                  },
-                }}
-                className="h-[140px] w-full"
-              >
-                <BarChart
-                  margin={{
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 10,
-                  }}
-                  data={[
-                    {
-                      activity: "stand",
-                      value: (8 / 12) * 100,
-                      label: "8/12 hr",
-                      fill: "var(--color-stand)",
-                    },
-                    {
-                      activity: "exercise",
-                      value: (46 / 60) * 100,
-                      label: "46/60 min",
-                      fill: "var(--color-exercise)",
-                    },
-                    {
-                      activity: "move",
-                      value: (245 / 360) * 100,
-                      label: "245/360 kcal",
-                      fill: "var(--color-move)",
-                    },
-                  ]}
-                  layout="vertical"
-                  barSize={32}
-                  barGap={2}
-                >
-                  <XAxis type="number" dataKey="value" hide />
-                  <YAxis
-                    dataKey="activity"
-                    type="category"
-                    tickLine={false}
-                    tickMargin={4}
-                    axisLine={false}
-                    className="capitalize"
-                  />
-                  <Bar dataKey="value" radius={5}>
-                    <LabelList
-                      position="insideLeft"
-                      dataKey="label"
-                      fill="white"
-                      offset={8}
-                      fontSize={12}
-                    />
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-            <CardFooter className="flex flex-row p-4 border-t">
-              <div className="flex items-center w-full gap-2">
-                <div className="grid flex-1 auto-rows-min gap-0.5">
-                  <div className="text-xs text-muted-foreground">Move</div>
-                  <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
-                    562
-                    <span className="text-sm font-normal text-muted-foreground">
-                      kcal
-                    </span>
-                  </div>
-                </div>
-                <Separator orientation="vertical" className="w-px h-10 mx-2" />
-                <div className="grid flex-1 auto-rows-min gap-0.5">
-                  <div className="text-xs text-muted-foreground">Exercise</div>
-                  <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
-                    73
-                    <span className="text-sm font-normal text-muted-foreground">
-                      min
-                    </span>
-                  </div>
-                </div>
-                <Separator orientation="vertical" className="w-px h-10 mx-2" />
-                <div className="grid flex-1 auto-rows-min gap-0.5">
-                  <div className="text-xs text-muted-foreground">Stand</div>
-                  <div className="flex items-baseline gap-1 text-2xl font-bold leading-none tabular-nums">
-                    14
-                    <span className="text-sm font-normal text-muted-foreground">
-                      hr
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-2 space-x-8 space-y-8 lg:grid-cols-1">
+          {renderChart('table')}
+          {renderChart('pie')}
+          {renderChart('line1')}
+          {renderChart('line2')}
+          {renderChart('curve1')}
+          {renderChart('curve2')}
         </div>
-        <div className="grid flex-1 w-full gap-6">
-          <Card
-            className="max-w-xs" x-chunk="charts-01-chunk-5"
-          >
-            <CardContent className="flex gap-4 p-4">
-              <div className="grid items-center gap-2">
-                <div className="grid flex-1 auto-rows-min gap-0.5">
-                  <div className="text-sm text-muted-foreground">Move</div>
-                  <div className="flex items-baseline gap-1 text-xl font-bold leading-none tabular-nums">
-                    562/600
-                    <span className="text-sm font-normal text-muted-foreground">
-                      kcal
-                    </span>
-                  </div>
-                </div>
-                <div className="grid flex-1 auto-rows-min gap-0.5">
-                  <div className="text-sm text-muted-foreground">Exercise</div>
-                  <div className="flex items-baseline gap-1 text-xl font-bold leading-none tabular-nums">
-                    73/120
-                    <span className="text-sm font-normal text-muted-foreground">
-                      min
-                    </span>
-                  </div>
-                </div>
-                <div className="grid flex-1 auto-rows-min gap-0.5">
-                  <div className="text-sm text-muted-foreground">Stand</div>
-                  <div className="flex items-baseline gap-1 text-xl font-bold leading-none tabular-nums">
-                    8/12
-                    <span className="text-sm font-normal text-muted-foreground">
-                      hr
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <ChartContainer
-                config={{
-                  move: {
-                    label: "Move",
-                    color: "hsl(var(--chart-1))",
-                  },
-                  exercise: {
-                    label: "Exercise",
-                    color: "hsl(var(--chart-2))",
-                  },
-                  stand: {
-                    label: "Stand",
-                    color: "hsl(var(--chart-3))",
-                  },
-                }}
-                className="mx-auto aspect-square w-full max-w-[80%]"
-              >
-                <RadialBarChart
-                  margin={{
-                    left: -10,
-                    right: -10,
-                    top: -10,
-                    bottom: -10,
-                  }}
-                  data={[
-                    {
-                      activity: "stand",
-                      value: (8 / 12) * 100,
-                      fill: "var(--color-stand)",
-                    },
-                    {
-                      activity: "exercise",
-                      value: (46 / 60) * 100,
-                      fill: "var(--color-exercise)",
-                    },
-                    {
-                      activity: "move",
-                      value: (245 / 360) * 100,
-                      fill: "var(--color-move)",
-                    },
-                  ]}
-                  innerRadius="20%"
-                  barSize={24}
-                  startAngle={90}
-                  endAngle={450}
-                >
-                  <PolarAngleAxis
-                    type="number"
-                    domain={[0, 100]}
-                    dataKey="value"
-                    tick={false}
-                  />
-                  <RadialBar dataKey="value" background cornerRadius={5} />
-                </RadialBarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-          <Card
-            className="max-w-xs" x-chunk="charts-01-chunk-6"
-          >
-            <CardHeader className="p-4 pb-0">
-              <CardTitle>Active Energy</CardTitle>
-              <CardDescription>
-                You're burning an average of 754 calories per day. Good job!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-row items-baseline gap-4 p-4 pt-2">
-              <div className="flex items-baseline gap-2 text-3xl font-bold leading-none tabular-nums">
-                1,254
-                <span className="text-sm font-normal text-muted-foreground">
-                  kcal/day
-                </span>
-              </div>
-              <ChartContainer
-                config={{
-                  calories: {
-                    label: "Calories",
-                    color: "hsl(var(--chart-1))",
-                  },
-                }}
-                className="ml-auto w-[64px]"
-              >
-                <BarChart
-                  accessibilityLayer
-                  margin={{
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                  }}
-                  data={[
-                    {
-                      date: "2024-01-01",
-                      calories: 354,
-                    },
-                    {
-                      date: "2024-01-02",
-                      calories: 514,
-                    },
-                    {
-                      date: "2024-01-03",
-                      calories: 345,
-                    },
-                    {
-                      date: "2024-01-04",
-                      calories: 734,
-                    },
-                    {
-                      date: "2024-01-05",
-                      calories: 645,
-                    },
-                    {
-                      date: "2024-01-06",
-                      calories: 456,
-                    },
-                    {
-                      date: "2024-01-07",
-                      calories: 345,
-                    },
-                  ]}
-                >
-                  <Bar
-                    dataKey="calories"
-                    fill="var(--color-calories)"
-                    radius={2}
-                    fillOpacity={0.2}
-                    activeIndex={6}
-                    activeBar={<Rectangle fillOpacity={0.8} />}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={4}
-                    hide
-                  />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-          <Card
-            className="max-w-xs" x-chunk="charts-01-chunk-7"
-          >
-            <CardHeader className="pb-0 space-y-0">
-              <CardDescription>Time in Bed</CardDescription>
-              <CardTitle className="flex items-baseline gap-1 text-4xl tabular-nums">
-                8
-                <span className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
-                  hr
-                </span>
-                35
-                <span className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
-                  min
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ChartContainer
-                config={{
-                  time: {
-                    label: "Time",
-                    color: "hsl(var(--chart-2))",
-                  },
-                }}
-              >
-                <AreaChart
-                  accessibilityLayer
-                  data={[
-                    {
-                      date: "2024-01-01",
-                      time: 8.5,
-                    },
-                    {
-                      date: "2024-01-02",
-                      time: 7.2,
-                    },
-                    {
-                      date: "2024-01-03",
-                      time: 8.1,
-                    },
-                    {
-                      date: "2024-01-04",
-                      time: 6.2,
-                    },
-                    {
-                      date: "2024-01-05",
-                      time: 5.2,
-                    },
-                    {
-                      date: "2024-01-06",
-                      time: 8.1,
-                    },
-                    {
-                      date: "2024-01-07",
-                      time: 7.0,
-                    },
-                  ]}
-                  margin={{
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                  }}
-                >
-                  <XAxis dataKey="date" hide />
-                  <YAxis domain={["dataMin - 5", "dataMax + 2"]} hide />
-                  <defs>
-                    <linearGradient id="fillTime" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="var(--color-time)"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="var(--color-time)"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    dataKey="time"
-                    type="natural"
-                    fill="url(#fillTime)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-time)"
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent hideLabel />}
-                    formatter={(value) => (
-                      <div className="flex min-w-[120px] items-center text-xs text-muted-foreground">
-                        Time in bed
-                        <div className="ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
-                          {value}
-                          <span className="font-normal text-muted-foreground">
-                            hr
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  />
-                </AreaChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
+      )}
+    </div>
+  </HomeContext.Provider>
+  )
+}
