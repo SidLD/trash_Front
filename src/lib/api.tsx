@@ -152,7 +152,7 @@ export const getUserSetting = (data:any) => {
 export const updateUserSetting = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .put(`${import.meta.env.VITE_API_URL}user/status`, data, dataHeader())
+      .put(`${import.meta.env.VITE_API_URL}user/setting`, data, dataHeader())
       .then((res:any) => {
         resolve(res);
       })

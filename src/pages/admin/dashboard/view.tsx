@@ -1,112 +1,374 @@
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Trash2, DollarSign, FileText, Users, UserCheck, Clock } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { UserType } from '@/lib/interface'
+import { getStat, getUsers } from '@/lib/api'
 
-import { Users, FileQuestion, ArrowUpRight, ArrowDownRight, BarChart2, PieChart } from 'lucide-react';
+interface FoodWasteData {
+  _id: string;
+  dateOfWaste: string;
+  foodCategory: string[];
+  dishesWasted: string[];
+  quantity: number;
+  cost: number;
+  reasonForWaste: string[];
+  notableIngredients: string[];
+  temperature: string;
+  mealType: string;
+  wasteStage: string;
+  preventable: string;
+  disposalMethod: string;
+  environmentalConditions: string;
+  relevantEvents: string;
+  additionalComments: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-// Mock data
-const userData = {
-  totalUsers: 1234,
-  newUsers: 56,
-  activeUsers: 789,
+interface User {
+  _id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A4DE6C', '#D0ED57', '#FFA07A', '#20B2AA']
+
+// Mock API functions (replace these with actual API calls)
+const fetchFoodWasteData = async (): Promise<FoodWasteData[]> => {
+  // Simulating API call
+  return new Promise( async (resolve) => {
+    const { data } = await getStat({}) as { data: { data: FoodWasteData[] } };
+    resolve(data.data)
+  });
 };
 
-const questionnaireData = {
-  totalQuestionnaires: 45,
-  completedQuestionnaires: 32,
-  averageCompletionTime: '15 minutes',
+const fetchUserData = async (): Promise<User[]> => {
+  // Simulating API call
+  return new Promise(async (resolve) =>  {
+    const {data} = await getUsers({}) as unknown as any 
+      resolve(data.map(
+        (user: UserType, index: number )=> {
+        return {
+          key: index,
+          ...user
+        }
+      }))
+  });
 };
 
-const UserOverviewCard = ({ title, value, icon: Icon, change, isPositive } : any) => (
-  <div className="flex items-center p-6 bg-white rounded-lg shadow">
-    <div className="mr-4">
-      <Icon size={24} className="text-blue-500" />
-    </div>
-    <div>
-      <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      {change && (
-        <p className={`text-sm ${isPositive ? 'text-green-500' : 'text-red-500'} flex items-center`}>
-          {isPositive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-          {change}
-        </p>
-      )}
-    </div>
-  </div>
-);
+export default function ComprehensiveDashboard() {
+  const [foodWasteData, setFoodWasteData] = useState<FoodWasteData[]>([]);
+  const [userData, setUserData] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-const QuestionnaireOverviewCard = ({ title, value, icon: Icon }: any) => (
-  <div className="p-6 bg-white rounded-lg shadow">
-    <div className="flex items-center mb-4">
-      <Icon size={24} className="mr-2 text-blue-500" />
-      <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
-    </div>
-    <p className="text-2xl font-bold text-gray-900">{value}</p>
-  </div>
-);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [foodWaste, users] = await Promise.all([
+          fetchFoodWasteData(),
+          fetchUserData()
+        ]);
+        setFoodWasteData(foodWaste);
+        setUserData(users);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-export default function DashboardView() {
+    fetchData();
+  }, []);
+
+  const totalWaste = foodWasteData.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCost = foodWasteData.reduce((sum, item) => sum + item.cost, 0);
+  const recordCount = foodWasteData.length;
+
+  const totalUsers = userData.length;
+  const approvedUsers = userData.filter(user => user.status === 'APPROVED').length;
+  const pendingUsers = userData.filter(user => user.status === 'PENDING').length;
+
+  const foodCategoryData = foodWasteData.reduce((acc, item) => {
+    item.foodCategory.forEach(category => {
+      acc[category] = (acc[category] || 0) + item.quantity;
+    });
+    return acc;
+  }, {} as Record<string, number>);
+
+  const dishesWastedData = foodWasteData.reduce((acc, item) => {
+    item.dishesWasted.forEach(dish => {
+      acc[dish] = (acc[dish] || 0) + item.quantity;
+    });
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topDishesWasted = Object.entries(dishesWastedData)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  const userRoleData = userData.reduce((acc, user) => {
+    acc[user.role] = (acc[user.role] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="min-h-screen p-8 bg-gray-100">
-      <h1 className="mb-8 text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+    <div className="container p-4 mx-auto">
+      <h1 className="mb-6 text-3xl font-bold">Comprehensive Dashboard</h1>
       
-      <div className="mb-12">
-        <h2 className="mb-4 text-2xl font-semibold text-gray-700">User Management Overview</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <UserOverviewCard 
-            title="Total Users" 
-            value={userData.totalUsers} 
-            icon={Users} 
-            change="+12% from last month" 
-            isPositive={true} 
-          />
-          <UserOverviewCard 
-            title="New Users" 
-            value={userData.newUsers} 
-            icon={Users} 
-            change="-3% from last week" 
-            isPositive={false} 
-          />
-          <UserOverviewCard 
-            title="Active Users" 
-            value={userData.activeUsers} 
-            icon={Users} 
-          />
-        </div>
-      </div>
-      
-      <div className="mb-12">
-        <h2 className="mb-4 text-2xl font-semibold text-gray-700">Questionnaire Overview</h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <QuestionnaireOverviewCard 
-            title="Total Questionnaires" 
-            value={questionnaireData.totalQuestionnaires} 
-            icon={FileQuestion} 
-          />
-          <QuestionnaireOverviewCard 
-            title="Completed Questionnaires" 
-            value={questionnaireData.completedQuestionnaires} 
-            icon={FileQuestion} 
-          />
-          <QuestionnaireOverviewCard 
-            title="Average Completion Time" 
-            value={questionnaireData.averageCompletionTime} 
-            icon={FileQuestion} 
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h3 className="mb-4 text-xl font-semibold text-gray-700">User Growth</h3>
-          <div className="flex items-center justify-center h-64">
-            <BarChart2 size={200} className="text-blue-500" />
+      <Tabs defaultValue="food-waste">
+        <TabsList className="mb-4">
+          <TabsTrigger value="food-waste">Food Waste</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="food-waste">
+          <div className="grid gap-4 mb-6 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Total Waste</CardTitle>
+                <Trash2 className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalWaste.toFixed(2)} kg</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+                <DollarSign className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalCost.toFixed(2)}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+                <FileText className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{recordCount}</div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h3 className="mb-4 text-xl font-semibold text-gray-700">Questionnaire Completion Rate</h3>
-          <div className="flex items-center justify-center h-64">
-            <PieChart size={200} className="text-blue-500" />
+
+          <div className="grid gap-4 mb-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Food Categories Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(foodCategoryData).map(([name, value]) => ({ name, value }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {Object.entries(foodCategoryData).map((_entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Top 5 Wasted Dishes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={topDishesWasted}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Food Waste Records</CardTitle>
+              <CardDescription>Latest food waste entries</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Dishes</TableHead>
+                      <TableHead>Quantity (kg)</TableHead>
+                      <TableHead>Cost ($)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {foodWasteData.map((item) => (
+                      <TableRow key={item._id}>
+                        <TableCell>{new Date(item.dateOfWaste).toLocaleDateString()}</TableCell>
+                        <TableCell>{item.foodCategory.join(', ')}</TableCell>
+                        <TableCell>{item.dishesWasted.join(', ')}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{item.cost}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <div className="grid gap-4 mb-6 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalUsers}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Approved Users</CardTitle>
+                <UserCheck className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{approvedUsers}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Pending Users</CardTitle>
+                <Clock className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{pendingUsers}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 mb-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Roles Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(userRoleData).map(([name, value]) => ({ name, value }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {Object.entries(userRoleData).map((_entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Users</CardTitle>
+                <CardDescription>List of the 5 most recently added users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {userData.slice(0, 5).map((user) => (
+                      <TableRow key={user._id}>
+                        <TableCell>{user.firstName} {user.lastName}</TableCell>
+                
+                        <TableCell>{user.status}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>All Users</CardTitle>
+              <CardDescription>Comprehensive list of all registered users</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created At</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {userData.map((user) => (
+                      <TableRow key={user._id}>
+                        <TableCell>{user.username}</TableCell>
+                        <TableCell>{user.firstName} {user.lastName}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.role}</TableCell>
+                        <TableCell>{user.status}</TableCell>
+                        <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
-  );
+  )
 }
