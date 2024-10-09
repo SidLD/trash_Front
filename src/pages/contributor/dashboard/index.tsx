@@ -1,5 +1,6 @@
-import { ContributorView } from "./view"
+import ContributorDashboardView from "./view"
+
 
 export const ContributorDashboard = () => {
-  return <ContributorView />
+  return <ContributorDashboardView />
 }

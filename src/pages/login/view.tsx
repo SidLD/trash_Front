@@ -30,10 +30,11 @@ export default function LoginView() {
         setPassword('')
       }
     } catch (error:any) {
+      console.log(error.response)
       toast({
         title: "Error",
         variant: "destructive",
-        description: `${error.response.data.data}`,
+        description: `${error.response.data.message}`,
       })
     }
     // navigate('/dashboard')

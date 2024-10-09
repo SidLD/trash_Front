@@ -29,7 +29,7 @@ const UserManagementView: React.FC = () => {
       if(data.acknowledged){
         toast({
           title: "Success",
-          description: "Delete Success",
+          description: "Update Success",
         })
         await fetchUsers()
       }

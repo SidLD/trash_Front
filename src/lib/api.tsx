@@ -116,12 +116,41 @@ export const updateRecordStatus = (id: string, data:any) => {
   });
 };
 
+export const deleteRecord = (data:{recordId: string}) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .delete(`${import.meta.env.VITE_API_URL}food-waste`, {
+        data, ...dataHeader()
+      })
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
 
 //Stat
 export const getStat = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
       .get(`${import.meta.env.VITE_API_URL}stat`, {
+          data, ...dataHeader()
+      })
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
+
+export const getContributorStat = (data:any) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}contributor/stat`, {
           data, ...dataHeader()
       })
       .then((res:any) => {

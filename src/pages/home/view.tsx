@@ -25,6 +25,7 @@ export interface FoodWasteData {
   disposalMethod: string;
   environmentalConditions: string;
   relevantEvents: string;
+  otherRelevantEvents: string;
   additionalComments: string;
   status: string;
   userId: {
@@ -76,7 +77,6 @@ const preparePieChartData = (data: FoodWasteData[]): { name: string; value: numb
   return Object.entries(dishesWastedData)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, 5) // Take top 5 dishes
 }
 
 const prepareBarChartData = (data: FoodWasteData[], key: 'foodCategory' | 'dishesWasted' | 'wasteStage'): { name: string; value: number }[] => {
@@ -199,13 +199,18 @@ export function HomeView() {
     }
   }
 
-  const getPossibleFactors = () => {
-    const factors = new Set<string>()
+  const getPossibleFactors = (): string[] => {
+    const factors = new Set<string>();
     foodWasteData.forEach(item => {
-      factors.add(item.relevantEvents)
-    })
-    return Array.from(factors).filter(factor => factor !== 'None')
-  }
+      if(item.relevantEvents === 'Other' && item.otherRelevantEvents != null){
+        factors.add(item.otherRelevantEvents);
+      }
+      if (item.relevantEvents !== 'None' && item.relevantEvents != 'Other') {
+        factors.add(item.relevantEvents);
+      }
+    });
+    return Array.from(factors);
+  };
   
   return (
     <HomeContext.Provider value={contextValue}>

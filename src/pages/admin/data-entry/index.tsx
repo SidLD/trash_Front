@@ -32,6 +32,7 @@ type FoodWasteRecord = {
   otherDisposalMethod?: string
   environmentalConditions?: string
   relevantEvents?: string
+  otherRelevantEvents? : string
   additionalComments?: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
   userId: UserType
@@ -258,6 +259,9 @@ export default function FoodWasteApproval() {
                               <div>
                                 <h4 className="font-semibold">Relevant Events:</h4>
                                 <p>{selectedRecord.relevantEvents}</p>
+                                {selectedRecord.otherRelevantEvents && (
+                                  <p>Other: {selectedRecord.otherRelevantEvents}</p>
+                                )}
                               </div>
                             )}
                             {selectedRecord.additionalComments && (

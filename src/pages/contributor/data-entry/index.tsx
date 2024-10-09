@@ -2,7 +2,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { toast } from 'react-hot-toast'
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -11,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { createRecord } from '@/lib/api'
+import { useToast } from '@/hooks/use-toast'
+import { Toaster } from '@/components/ui/toaster'
 
 const formSchema = z.object({
   dateOfWaste: z.string().nonempty('Date of Waste is required'),
@@ -32,6 +33,7 @@ const formSchema = z.object({
   otherDisposalMethod: z.string().optional(),
   environmentalConditions: z.string().optional(),
   relevantEvents: z.string().optional(),
+  otherRelevantEvents: z.string().optional(),
   additionalComments: z.string().optional(),
 })
 
@@ -45,9 +47,11 @@ const temperatures = ['Hot', 'Normal', 'Cold', `Didn't Notice`]
 const mealTypes = ['Breakfast Foods', 'Lunch Foods', 'Merienda Foods']
 const wasteStages = ['50% Consumer & 50% Food Stalls', 'More on Consumers side', 'More on Food Stalls side']
 const disposalMethods = ['Thrown Away & to be Collected', 'Composted', 'Used for Animal Feed', 'Other']
-const relevantEvents = ['University Intramurals', 'City Festival', 'Charity Events', 'Foundation Day', 'Acquaintance Party']
+const relevantEvents = ['University Intramurals', 'City Festival', 'Charity Events', 'Foundation Day', 'Acquaintance Party', 'Other']
 
 export default function ContributorDataEntry() {
+
+  const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,12 +64,20 @@ export default function ContributorDataEntry() {
 
   async function onSubmit(formData: FormValues) {
     try {
-      toast.success('Form submitted successfully!')
       console.log('Form Data:', formData)
       const {data} = await createRecord(formData) as unknown as any;
+      toast({
+        title: "Success",
+        description: "New Data",
+      })
       console.log(data)
     } catch (error) {
+      toast({
+        title: "Error",
+        description: "Error",
+      })
       console.log(error)
+      
     }
   }
 
@@ -555,33 +567,49 @@ export default function ContributorDataEntry() {
             )}
           />
 
+        <FormField
+          control={form.control}
+          name="relevantEvents"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Relevant Events</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Event" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {relevantEvents.map((event) => (
+                    <SelectItem key={event} value={event}>
+                      {event}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                What were the Events that could possibly play a factor on the Food Waste?
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.watch('relevantEvents') === 'Other' && (
           <FormField
             control={form.control}
-            name="relevantEvents"
+            name="otherRelevantEvents"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Relevant Events</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Event" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {relevantEvents.map((event) => (
-                      <SelectItem key={event} value={event}>
-                        {event}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  What were the Events that could possibly play a factor on the Food Waste?
-                </FormDescription>
+                <FormLabel>Other Relevant Event</FormLabel>
+                <FormControl>
+                  <Input placeholder="Please specify other relevant event" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+        )}
 
           <FormField
             control={form.control}
@@ -607,6 +635,8 @@ export default function ContributorDataEntry() {
           <Button type="submit" className="w-full">Submit</Button>
         </form>
       </Form>
+
+      <Toaster  />
     </TooltipProvider>
   )
 }
