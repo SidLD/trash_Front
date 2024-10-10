@@ -270,12 +270,27 @@ export function HomeView() {
         return (
           <ResponsiveContainer {...commonProps}>
             <LineChart data={lineChartData} onClick={() => handleChartClick('line2')}>
-              <CartesianGrid strokeDasharray="3 3" className='w-full' />
-              <XAxis dataKey="cost" type="number" label={{ value: 'Cost of Wasted Food ($)', position: 'insideBottom', offset: -5 }} />
-              <YAxis dataKey="date" type="category" label={{ value: 'Date of Waste', angle: -90, position: 'insideLeft', offset: -5 }} />
+              <CartesianGrid strokeDasharray="3 3" className="w-full" />
+              <XAxis 
+                dataKey="date" 
+                type="category" 
+                label={{ value: 'Date of Waste', position: 'insideBottom', offset: -5 }} 
+              />
+              <YAxis 
+                dataKey="cost" 
+                type="number" 
+                label={{ value: 'Cost of Wasted Food ($)', angle: -90, position: 'insideLeft', offset: -5 }} 
+              />
+              
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="cost" stroke="#82ca9d" name="Cost ($)" />
+              
+              <Line 
+                type="monotone" 
+                dataKey="cost" 
+                stroke="#82ca9d" 
+                name="Cost ($)" 
+              />
             </LineChart>
           </ResponsiveContainer>
         )
