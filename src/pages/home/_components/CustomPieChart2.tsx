@@ -7,9 +7,10 @@ interface CustomCurveChartProps {
   onClick: () => void;
 }
 
-export const CustomPieChart : React.FC<CustomCurveChartProps> = ({ onClick }) => {
-    const {pieChartData, COLORS} = useContext(HomeContext)
+export const CustomPieChart2 : React.FC<CustomCurveChartProps> = ({ onClick }) => {
+    const {pieChartData2, COLORS} = useContext(HomeContext)
   return  <Card onClick={onClick} className="transition-all cursor-pointer hover:shadow-lg w-[700px]">
+
   <CardContent>
     <ChartContainer
       config={{
@@ -23,7 +24,7 @@ export const CustomPieChart : React.FC<CustomCurveChartProps> = ({ onClick }) =>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={pieChartData}
+            data={pieChartData2}
             cx="50%"
             cy="50%"
             labelLine={false}
@@ -32,7 +33,7 @@ export const CustomPieChart : React.FC<CustomCurveChartProps> = ({ onClick }) =>
             dataKey="value"
             label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
           >
-            {pieChartData.map((_entry:any, index: number) => (
+            {pieChartData2.map((_entry:any, index: number) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

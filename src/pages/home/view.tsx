@@ -1,13 +1,12 @@
-import { createContext, useCallback, useEffect, useRef, useState } from 'react'
+import  { createContext, useCallback, useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client';
 import { CustomPieChart } from './_components/CustomPieChart'
-import { CustomLineChart1 } from './_components/CustomLineChart1'
-import { CustomLineChart2 } from './_components/CustomLineChart2'
-import { CustomCurveChart } from './_components/CostomCurveChart'
-import { CustomCurveChart2 } from './_components/CostomCurveChart2'
+import { CustomPieChart2 } from './_components/CustomPieChart2';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getStat } from '@/lib/api';
+import { Trash2, DollarSign, FileText } from 'lucide-react';
+import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, LineChart, Line, ScatterChart, Scatter } from 'recharts';
 
 export interface FoodWasteData {
   _id: string;
@@ -18,7 +17,7 @@ export interface FoodWasteData {
   cost: number;
   reasonForWaste: string[];
   notableIngredients: string[];
-  temperature: string;
+  temperature: 'hot' | 'normal' | 'cold' | "didn't notice";
   mealType: string;
   wasteStage: string;
   preventable: string;
@@ -44,17 +43,19 @@ export interface FoodWasteData {
 interface HomeContextType {
   foodWasteData: FoodWasteData[];
   pieChartData: { name: string; value: number }[];
+  pieChartData2: { name: string; value: number }[];
   foodCategoryData: { name: string; value: number }[];
   dishesWastedData: { name: string; value: number }[];
   stageOfWasteData: { name: string; value: number }[];
   lineChartData: { date: string; quantity: number; cost: number }[];
-  scatterChartData: { x: number; y: number }[];
+  scatterChartData: { quantity: number; cost: number; temperature: string }[];
   COLORS: string[];
 }
 
 export const HomeContext = createContext<HomeContextType>({
   foodWasteData: [],
   pieChartData: [],
+  pieChartData2: [],
   foodCategoryData: [],
   dishesWastedData: [],
   stageOfWasteData: [],
@@ -79,15 +80,29 @@ const preparePieChartData = (data: FoodWasteData[]): { name: string; value: numb
     .sort((a, b) => b.value - a.value)
 }
 
+const preparePieChartData2 = (data: FoodWasteData[]): { name: string; value: number }[] => {
+  const dishesWastedData = data.reduce((acc: { [key: string]: number }, curr) => {
+    curr.reasonForWaste.forEach(dish => {
+      if (dish !== 'None') {
+        acc[dish] = (acc[dish] || 0) + curr.quantity
+      }
+    })
+    return acc
+  }, {})
+  return Object.entries(dishesWastedData)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+}
+
 const prepareBarChartData = (data: FoodWasteData[], key: 'foodCategory' | 'dishesWasted' | 'wasteStage'): { name: string; value: number }[] => {
   const groupedData = data.reduce((acc: { [key: string]: number }, curr) => {
     const categories = curr[key]
     if (Array.isArray(categories)) {
       categories.forEach(category => {
-        acc[category] = (acc[category] || 0) + curr.cost
+        acc[category] = (acc[category] || 0) + (key === 'dishesWasted' ? curr.cost : curr.quantity)
       })
     } else {
-      acc[categories] = (acc[categories] || 0) + curr.cost
+      acc[categories] = (acc[categories] || 0) + (key === 'dishesWasted' ? curr.cost : curr.quantity)
     }
     return acc
   }, {})
@@ -102,14 +117,17 @@ const prepareLineChartData = (data: FoodWasteData[]): { date: string; quantity: 
   })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 }
 
-const prepareScatterChartData = (data: FoodWasteData[]): { x: number; y: number }[] => {
-  return data.map(item => ({
-    x: item.quantity,
-    y: item.cost
-  }))
+const prepareScatterChartData = (data: FoodWasteData[]): { quantity: number; cost: number; temperature: string }[] => {
+  return data
+    .filter(item => item.temperature !== "didn't notice")
+    .map(item => ({
+      quantity: item.quantity,
+      cost: item.cost,
+      temperature: item.temperature
+    }))
 }
 
-type ChartType = 'pie' | 'line1' | 'line2' | 'curve1' | 'curve2' | null;
+type ChartType = 'pie1' | 'pie2'| 'bar1' | 'bar2' | 'bar3' | 'line1' | 'line2' | 'scatter1' | 'scatter2' | null;
 
 export function HomeView() {
   const [selectedChart, setSelectedChart] = useState<ChartType>(null)
@@ -147,6 +165,7 @@ export function HomeView() {
   }, [socket]);
 
   const pieChartData = preparePieChartData(foodWasteData)
+  const pieChartData2 = preparePieChartData2(foodWasteData)
   const foodCategoryData = prepareBarChartData(foodWasteData, 'foodCategory')
   const dishesWastedData = prepareBarChartData(foodWasteData, 'dishesWasted')
   const stageOfWasteData = prepareBarChartData(foodWasteData, 'wasteStage')
@@ -161,6 +180,7 @@ export function HomeView() {
     stageOfWasteData,
     lineChartData,
     scatterChartData,
+    pieChartData2,
     COLORS
   }
 
@@ -183,17 +203,106 @@ export function HomeView() {
   }, [handleOutsideClick])
 
   const renderChart = (chartType: ChartType) => {
+    const commonProps = {
+      width: 600,
+      height: 300,
+      margin: { top: 5, right: 30, left: 5, bottom: 5 },
+    };
+
     switch (chartType) {
-      case 'pie':
-        return <CustomPieChart onClick={() => handleChartClick('pie')} />
+      case 'pie1':
+        return <CustomPieChart onClick={() => handleChartClick('pie1')} />
+      case 'pie2':
+        return <CustomPieChart2 onClick={() => handleChartClick('pie2')} />
+      case 'bar1':
+        return (
+          <ResponsiveContainer {...commonProps}>
+            <BarChart data={foodCategoryData} onClick={() => handleChartClick('bar1')}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" label={{ value: 'Food Category', position: 'insideBottom', offset: -5 }} />
+              <YAxis label={{ value: 'Quantity of Food Waste (kg)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#8884d8" name="Quantity (kg)" />
+            </BarChart>
+          </ResponsiveContainer>
+        )
+      case 'bar2':
+        return (
+          <ResponsiveContainer {...commonProps}>
+            <BarChart data={dishesWastedData} onClick={() => handleChartClick('bar2')}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" label={{ value: 'Dishes Wasted', position: 'insideBottom', offset: -5 }} />
+              <YAxis label={{ value: 'Cost of Wasted Food', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#82ca9d" name="Cost ($)" />
+            </BarChart>
+          </ResponsiveContainer>
+        )
+      case 'bar3':
+        return (
+          <ResponsiveContainer {...commonProps}>
+            <BarChart data={stageOfWasteData} onClick={() => handleChartClick('bar3')}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" label={{ value: 'Stage of Waste', position: 'insideBottom', offset: -5 }} />
+              <YAxis label={{ value: 'Quantity of Food Waste', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#ffc658" name="Quantity (kg)" />
+            </BarChart>
+          </ResponsiveContainer>
+        )
       case 'line1':
-        return <CustomLineChart1 onClick={() => handleChartClick('line1')} />
+        return (
+          <ResponsiveContainer {...commonProps}>
+            <LineChart data={lineChartData} onClick={() => handleChartClick('line1')}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" label={{ value: 'Date of Waste', position: 'insideBottom', offset: -5 }} />
+              <YAxis label={{ value: 'Quantity of Food Waste (kg)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="quantity" stroke="#8884d8" name="Quantity (kg)" />
+            </LineChart>
+          </ResponsiveContainer>
+        )
       case 'line2':
-        return <CustomLineChart2 onClick={() => handleChartClick('line2')} />
-      case 'curve1':
-        return <CustomCurveChart onClick={() => handleChartClick('curve1')} />
-      case 'curve2':
-        return <CustomCurveChart2 onClick={() => handleChartClick('curve2')} />
+        return (
+          <ResponsiveContainer {...commonProps}>
+            <LineChart data={lineChartData} onClick={() => handleChartClick('line2')}>
+              <CartesianGrid strokeDasharray="3 3" className='w-full' />
+              <XAxis dataKey="cost" type="number" label={{ value: 'Cost of Wasted Food ($)', position: 'insideBottom', offset: -5 }} />
+              <YAxis dataKey="date" type="category" label={{ value: 'Date of Waste', angle: -90, position: 'insideLeft', offset: -5 }} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="cost" stroke="#82ca9d" name="Cost ($)" />
+            </LineChart>
+          </ResponsiveContainer>
+        )
+      case 'scatter1':
+        return (
+          <ResponsiveContainer {...commonProps}>
+            <ScatterChart onClick={() => handleChartClick('scatter1')}>
+              <CartesianGrid />
+              <XAxis type="number" dataKey="cost" name="Cost ($)" label={{ value: 'Cost ($)', position: 'insideBottom', offset: -5 }} />
+              <YAxis type="number" dataKey="quantity" name="Quantity (kg)" label={{ value: 'Quantity (kg)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+              <Scatter name="Food Waste" data={scatterChartData} fill="#8884d8" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        )
+      case 'scatter2':
+        return (
+          <ResponsiveContainer {...commonProps}>
+            <ScatterChart onClick={() => handleChartClick('scatter2')}>
+              <CartesianGrid />
+              <XAxis dataKey="cost" type="number" name="Cost ($)" label={{ value: 'Cost ($)', position: 'insideBottom', offset: -5 }} />
+              <YAxis dataKey="temperature" type="category" name="Temperature" label={{ value: 'Temperature', angle: -90, position: 'insideLeft' }} />
+              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+              <Scatter name="Food Waste" data={scatterChartData} fill="#82ca9d" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        )
       default:
         return null
     }
@@ -206,21 +315,79 @@ export function HomeView() {
         factors.add(item.otherRelevantEvents);
       }
       if (item.relevantEvents !== 'None' && item.relevantEvents != 'Other') {
+        
         factors.add(item.relevantEvents);
       }
     });
     return Array.from(factors);
   };
+
+  const totalWaste = foodWasteData.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCost = foodWasteData.reduce((sum, item) => sum + item.cost, 0);
+  const recordCount = foodWasteData.length
   
   return (
     <HomeContext.Provider value={contextValue}>
-      <div className="container mx-auto">
+      <div className="p-4 mx-auto">
         <h1 className="my-4 text-2xl font-bold">Food Waste Dashboard</h1>
-        {selectedChart ? (
-          <div ref={chartRef} className="space-y-8">
-            <div >
-              {renderChart(selectedChart)}
+        <div className="grid gap-4 mb-6 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Total Waste</CardTitle>
+              <Trash2 className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalWaste.toFixed(2)} kg</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${totalCost.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+              <FileText className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{recordCount}</div>
+            </CardContent>
+          </Card>
+        </div>
+        <div ref={chartRef} className="space-y-8">
+          {selectedChart ? (
+            <Card className="p-4">
+              <CardHeader>
+                <CardTitle>{getChartTitle(selectedChart)}</CardTitle>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <div style={{ minWidth: '500px' }}>
+                  {renderChart(selectedChart)}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 ">
+              {(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'] as ChartType[]).map((chartType) => (
+                <Card key={chartType} className="p-4">
+                  <CardHeader>
+                    <CardTitle>{getChartTitle(chartType)}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <div style={{ minWidth: '500px' }}>
+                      {renderChart(chartType)}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+          )}
+          {selectedChart && (
             <Card>
               <CardHeader>
                 <CardTitle>Possible Factors</CardTitle>
@@ -243,23 +410,34 @@ export function HomeView() {
                 </Table>
               </CardContent>
             </Card>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-2">
-            <div className='w-full h-fit'>
-              {renderChart('pie')}
-            </div>
-            <div className='gap-2 lg:flex'>
-              {renderChart('line1')}
-              {renderChart('line2')}
-            </div>
-            <div className='gap-2 lg:flex'>
-              {renderChart('curve1')}
-              {renderChart('curve2')}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </HomeContext.Provider>
   )
+}
+
+function getChartTitle(chartType: ChartType): string {
+  switch (chartType) {
+    case 'pie1':
+      return 'Food Waste by Dish'
+    case 'pie2':
+      return 'Reasons for Food Waste'
+    case 'bar1':
+      return 'Quantity of Food Waste (kg) vs. Food Category'
+    case 'bar2':
+      return 'Cost of Wasted Food vs. Dishes Wasted'
+    case 'bar3':
+      return 'Quantity of Food Waste vs. Stage of Waste'
+    case 'line1':
+      return 'Date of Waste vs. Quantity of Food Waste (kg)'
+    case 'line2':
+      return 'Cost of Wasted Food vs. Date of Waste'
+    case 'scatter1':
+      return 'Cost of Wasted Food vs. Quantity of Food Waste'
+    case 'scatter2':
+      return 'Cost of Wasted Food vs. Temperature Factor'
+    default:
+      return 'Chart'
+  }
 }
