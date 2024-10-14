@@ -149,13 +149,15 @@ export function HomeView() {
       transports: ["websocket"]
     });
     setSocket(newSocket);
-
+    console.log(newSocket)
     return () => {
       newSocket.disconnect();
     }
   }, []);
 
   useEffect(() => {
+
+    console.log("test", socket)
     if (socket) {
       socket.on('update-data', (newData: any) => {
         console.log("New data received:", newData);
