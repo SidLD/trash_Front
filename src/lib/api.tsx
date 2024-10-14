@@ -5,7 +5,7 @@ console.log(import.meta.env.VITE_API_URL)
 export const login = (data:LoginType) => {
     return new Promise((resolve, reject) => {
       axios
-        .post(`${import.meta.env.VITE_API_URL}login`, data)
+        .post(`${import.meta.env.VITE_API_URL}/login`, data)
         .then((res:any) => {
           resolve(res);
         })
@@ -18,7 +18,7 @@ export const login = (data:LoginType) => {
 export const register = (data:RegisterUserType) => {
   return new Promise((resolve, reject) => {
     axios
-      .post(`${import.meta.env.VITE_API_URL}register`, data, dataHeader())
+      .post(`${import.meta.env.VITE_API_URL}/register`, data, dataHeader())
       .then((res:any) => {
         resolve(res);
       })
@@ -31,7 +31,7 @@ export const register = (data:RegisterUserType) => {
 export const updateUser = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .put(`${import.meta.env.VITE_API_URL}user/status`, data, dataHeader())
+      .put(`${import.meta.env.VITE_API_URL}/user/status`, data, dataHeader())
       .then((res:any) => {
         resolve(res);
       })
@@ -44,7 +44,7 @@ export const updateUser = (data:any) => {
 export const getUsers = (data:any) => {
     return new Promise((resolve, reject) => {
       axios
-        .get(`${import.meta.env.VITE_API_URL}users`, {
+        .get(`${import.meta.env.VITE_API_URL}/users`, {
             data, ...dataHeader()
         })
         .then((res:any) => {
@@ -59,7 +59,7 @@ export const getUsers = (data:any) => {
 export const deleteUser = (data:any) => {
     return new Promise((resolve, reject) => {
       axios
-        .delete(`${import.meta.env.VITE_API_URL}user`, {
+        .delete(`${import.meta.env.VITE_API_URL}/user`, {
             data,
             ...dataHeader()
         })
@@ -77,7 +77,7 @@ export const deleteUser = (data:any) => {
 export const createRecord = (data:FoodWasteType) => {
   return new Promise((resolve, reject) => {
     axios
-      .post(`${import.meta.env.VITE_API_URL}food-waste`, data, dataHeader())
+      .post(`${import.meta.env.VITE_API_URL}/food-waste`, data, dataHeader())
       .then((res:any) => {
         resolve(res);
       })
@@ -91,7 +91,7 @@ export const createRecord = (data:FoodWasteType) => {
 export const getRecords = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}food-waste`, {
+      .get(`${import.meta.env.VITE_API_URL}/food-waste`, {
           data, ...dataHeader()
       })
       .then((res:any) => {
@@ -106,7 +106,7 @@ export const getRecords = (data:any) => {
 export const updateRecordStatus = (id: string, data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .put(`${import.meta.env.VITE_API_URL}food-waste/${id}/status`, data, dataHeader())
+      .put(`${import.meta.env.VITE_API_URL}/food-waste/${id}/status`, data, dataHeader())
       .then((res:any) => {
         resolve(res);
       })
@@ -119,7 +119,7 @@ export const updateRecordStatus = (id: string, data:any) => {
 export const deleteRecord = (data:{recordId: string}) => {
   return new Promise((resolve, reject) => {
     axios
-      .delete(`${import.meta.env.VITE_API_URL}food-waste`, {
+      .delete(`${import.meta.env.VITE_API_URL}/food-waste`, {
         data, ...dataHeader()
       })
       .then((res:any) => {
@@ -135,7 +135,7 @@ export const deleteRecord = (data:{recordId: string}) => {
 export const getStat = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}stat`, {
+      .get(`${import.meta.env.VITE_API_URL}/stat`, {
           data, ...dataHeader()
       })
       .then((res:any) => {
@@ -150,7 +150,7 @@ export const getStat = (data:any) => {
 export const getContributorStat = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}contributor/stat`, {
+      .get(`${import.meta.env.VITE_API_URL}/contributor/stat`, {
           data, ...dataHeader()
       })
       .then((res:any) => {
@@ -166,7 +166,7 @@ export const getContributorStat = (data:any) => {
 export const getUserSetting = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}user/setting`, {
+      .get(`${import.meta.env.VITE_API_URL}/user/setting`, {
           data, ...dataHeader()
       })
       .then((res:any) => {
@@ -181,7 +181,7 @@ export const getUserSetting = (data:any) => {
 export const updateUserSetting = (data:any) => {
   return new Promise((resolve, reject) => {
     axios
-      .put(`${import.meta.env.VITE_API_URL}user/setting`, data, dataHeader())
+      .put(`${import.meta.env.VITE_API_URL}/user/setting`, data, dataHeader())
       .then((res:any) => {
         resolve(res);
       })
