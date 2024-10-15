@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mountain } from 'lucide-react'
+
+import logo from '../../assets/logo_c.png'
 import { RegisterUserType } from '@/lib/interface'
 import { register } from '@/lib/api'
 import { Toaster } from '@/components/ui/toaster'
@@ -48,8 +49,8 @@ export default function SignUpView() {
       {/* Logo Section */}
       <div className="items-center justify-center hidden w-1/2 bg-gray-100 lg:flex">
         <div className="text-center">
-          <Mountain className="w-32 h-32 mx-auto text-primary" />
-          <h1 className="mt-4 text-4xl font-bold text-gray-900">Your Company</h1>
+          <img src={logo}  />
+        <h1 className="mt-4 text-4xl font-bold text-gray-900">Your Company</h1>
           <p className="mt-2 text-xl text-gray-600">Welcome back!</p>
         </div>
       </div>

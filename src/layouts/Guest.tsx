@@ -1,4 +1,5 @@
 import { Outlet, Link } from "react-router-dom"
+import logo from '../assets/logo_r.png'
 export default function GuestLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
@@ -7,7 +8,7 @@ export default function GuestLayout() {
           <div className="flex items-center justify-between py-4">
             <div className="flex-shrink-0">
               <Link to="/" className="text-2xl font-bold text-gray-900">
-                YourLogo
+                <img width={70} src={logo} alt="logo-header" className="duration-100 hover:scale-110"/>
               </Link>
             </div>
             
