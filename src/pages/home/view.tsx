@@ -478,7 +478,6 @@ export function HomeView() {
               {(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'] as ChartType[]).map((chartType) => (
                 <Card key={chartType} className="p-4">
                   <CardHeader>
-                    <CardTitle>{getChartTitle(chartType)}</CardTitle>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <div style={{ minWidth: '500px' }}>
