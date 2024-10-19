@@ -2,37 +2,41 @@ import React, { useContext } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { HomeContext } from '../view'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { ResponsiveContainer, Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Legend } from 'recharts'
 
-interface CustomBarChartProps {
+interface CustomCurveChartProps {
   onClick: () => void
-  data1: Array<{ name: string; value: number }>
-  data2?: Array<{ name: string; value: number }>
+  data1: Array<{ date: string; quantity: number; cost: number }>
+  data2?: Array<{ date: string; quantity: number; cost: number }>
   month1: string
   month2?: string
   title: string
   xAxisLabel: string
   yAxisLabel: string
+  dataKey: 'quantity' | 'cost'
 }
 
-export const CustomBarChart: React.FC<CustomBarChartProps> = ({ 
-  onClick, 
-  data1, 
-  data2, 
-  month1, 
-  month2, 
+export const CustomCurveChart2: React.FC<CustomCurveChartProps> = ({
+  onClick,
+  data1,
+  data2,
+  month1,
+  month2,
   title,
   xAxisLabel,
-  yAxisLabel
+  yAxisLabel,
+  dataKey
 }) => {
   const { COLORS } = useContext(HomeContext)
 
-  // Combine data for both months
-  const combinedData = data1.map(item => ({
-    name: item.name,
-    [month1]: item.value,
-    ...(data2 ? { [month2 as string]: data2.find(d => d.name === item.name)?.value || 0 } : {})
-  }))
+  const formatXAxis = (tickItem: string) => {
+    const date = new Date(tickItem)
+    return `${date.getDate()}/${date.getMonth() + 1}`
+  }
+
+  const formatYAxis = (value: number) => {
+    return dataKey === 'cost' ? `$${value.toFixed(2)}` : value.toFixed(2)
+  }
 
   return (
     <Card onClick={onClick} className="transition-all cursor-pointer hover:shadow-lg">
@@ -57,19 +61,24 @@ export const CustomBarChart: React.FC<CustomBarChartProps> = ({
           className="h-[400px]"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={combinedData}>
+            <LineChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="name" 
-                label={{ value: xAxisLabel, position: 'insideBottom', offset: -5 }}
+                dataKey="date" 
+                tickFormatter={formatXAxis}
+                label={{ value: xAxisLabel, position: 'insideBottom', offset: -5 }} 
               />
               <YAxis 
-                label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
+                tickFormatter={formatYAxis}
+                label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }} 
               />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey={month1} fill={COLORS[0]} />
-              {month2 && <Bar dataKey={month2} fill={COLORS[1]} />}
-            </BarChart>
+              <Legend />
+              <Line type="monotone" dataKey={dataKey} data={data1} name={month1} stroke={COLORS[0]} activeDot={{ r: 8 }} />
+              {month2 && data2 && (
+                <Line type="monotone" dataKey={dataKey} data={data2} name={month2} stroke={COLORS[1]} activeDot={{ r: 8 }} />
+              )}
+            </LineChart>
           </ResponsiveContainer>
         </ChartContainer>
       </CardContent>

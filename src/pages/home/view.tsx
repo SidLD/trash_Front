@@ -1,55 +1,61 @@
-import  { createContext, useCallback, useEffect, useRef, useState } from 'react'
-import { io, Socket } from 'socket.io-client';
+"use client"
+
+import { createContext, useCallback, useEffect, useRef, useState } from 'react'
+import { io, Socket } from 'socket.io-client'
 import { CustomPieChart } from './_components/CustomPieChart'
-import { CustomPieChart2 } from './_components/CustomPieChart2';
+import { CustomPieChart2 } from './_components/CustomPieChart2'
+import { CustomCurveChart } from './_components/CustomCurveChart'
+import { CustomBarChart } from './_components/CustomLineChart1'
+import { CustomScatterChart } from './_components/CustomScatterChart'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getStat } from '@/lib/api';
-import { Trash2, DollarSign, FileText } from 'lucide-react';
-import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, LineChart, Line, ScatterChart, Scatter } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { getStat } from '@/lib/api'
+import { FileText, Popcorn, PhilippinePeso } from 'lucide-react'
 
 export interface FoodWasteData {
-  _id: string;
-  dateOfWaste: string;
-  foodCategory: string[];
-  dishesWasted: string[];
-  quantity: number;
-  cost: number;
-  reasonForWaste: string[];
-  notableIngredients: string[];
-  temperature: 'hot' | 'normal' | 'cold' | "didn't notice";
-  mealType: string;
-  wasteStage: string;
-  preventable: string;
-  disposalMethod: string;
-  environmentalConditions: string;
-  relevantEvents: string;
-  otherRelevantEvents: string;
-  additionalComments: string;
-  status: string;
+  _id: string
+  dateOfWaste: string
+  foodCategory: string[]
+  dishesWasted: string[]
+  quantity: number
+  cost: number
+  reasonForWaste: string[]
+  notableIngredients: string[]
+  temperature: 'hot' | 'normal' | 'cold' | "didn't notice"
+  mealType: string
+  wasteStage: string
+  preventable: string
+  disposalMethod: string
+  environmentalConditions: string
+  relevantEvents: string
+  otherRelevantEvents: string
+  additionalComments: string
+  status: string
   userId: {
-    _id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-    status: string;
-  };
-  createdAt: string;
-  updatedAt: string;
+    _id: string
+    username: string
+    firstName: string
+    lastName: string
+    email: string
+    role: string
+    status: string
+  }
+  createdAt: string
+  updatedAt: string
 }
 
 interface HomeContextType {
-  foodWasteData: FoodWasteData[];
-  pieChartData: { name: string; value: number }[];
-  pieChartData2: { name: string; value: number }[];
-  foodCategoryData: { name: string; value: number }[];
-  dishesWastedData: { name: string; value: number }[];
-  stageOfWasteData: { name: string; value: number }[];
-  lineChartData: { date: string; quantity: number; cost: number }[];
-  scatterChartData: { quantity: number; cost: number; temperature: string }[];
-  COLORS: string[];
+  foodWasteData: FoodWasteData[]
+  pieChartData: { name: string; value: number }[]
+  pieChartData2: { name: string; value: number }[]
+  foodCategoryData: { name: string; value: number }[]
+  dishesWastedData: { name: string; value: number }[]
+  stageOfWasteData: { name: string; value: number }[]
+  lineChartData: { date: string; quantity: number; cost: number }[]
+  scatterChartData: { quantity: number; cost: number; temperature: string }[]
+  COLORS: string[]
 }
 
 export const HomeContext = createContext<HomeContextType>({
@@ -127,52 +133,91 @@ const prepareScatterChartData = (data: FoodWasteData[]): { quantity: number; cos
     }))
 }
 
-type ChartType = 'pie1' | 'pie2'| 'bar1' | 'bar2' | 'bar3' | 'line1' | 'line2' | 'scatter1' | 'scatter2' | null;
+function getMonthYear(date: string) {
+  const d = new Date(date)
+  return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`
+}
+
+function getCurrentMonthYear() {
+  const now = new Date()
+  return `${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`
+}
+
+function aggregateDataByMonth(data: FoodWasteData[]) {
+  return data.reduce((acc, curr) => {
+    const monthYear = getMonthYear(curr.dateOfWaste)
+    if (!acc[monthYear]) {
+      acc[monthYear] = { totalWaste: 0, totalCost: 0 }
+    }
+    acc[monthYear].totalWaste += curr.quantity
+    acc[monthYear].totalCost += curr.cost
+    return acc
+  }, {} as Record<string, { totalWaste: number; totalCost: number }>)
+}
+
+type ChartType = 'pie1' | 'pie2'| 'bar1' | 'bar2' | 'bar3' | 'line1' | 'line2' | 'scatter1' | 'scatter2' | null
 
 export function HomeView() {
   const [selectedChart, setSelectedChart] = useState<ChartType>(null)
-  const [foodWasteData, setFoodWasteData] = useState<FoodWasteData[]>([]);
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [foodWasteData, setFoodWasteData] = useState<FoodWasteData[]>([])
+  const [socket, setSocket] = useState<Socket | null>(null)
+  const [selectedMonth1, setSelectedMonth1] = useState<string>(getCurrentMonthYear())
+  const [selectedMonth2, setSelectedMonth2] = useState<string | undefined>(undefined)
   
   useEffect(() => {
     const initData = async () => {
       try {
-        const { data } = await getStat({}) as { data: { data: FoodWasteData[] } };
-        setFoodWasteData(data.data);
+        const { data } = await getStat({}) as { data: { data: FoodWasteData[] } }
+        setFoodWasteData(data.data)
       } catch (error) {
-        console.error("Error fetching initial data:", error);
+        console.error("Error fetching initial data:", error)
       }
     }
-    void initData();
+    void initData()
 
     const newSocket = io(`${import.meta.env.VITE_API_URL}`, {
       transports: ["websocket"]
-    });
-    setSocket(newSocket);
+    })
+    setSocket(newSocket)
     console.log(newSocket)
     return () => {
-      newSocket.disconnect();
+      newSocket.disconnect()
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-
     console.log("test", socket)
     if (socket) {
       socket.on('update-data', (newData: any) => {
-        console.log("New data received:", newData);
-        setFoodWasteData(prevData => [...prevData, JSON.parse(newData)]);
-      });
+        console.log("New data received:", newData)
+        setFoodWasteData(prevData => [...prevData, JSON.parse(newData)])
+      })
     }
-  }, [socket]);
+  }, [socket])
 
-  const pieChartData = preparePieChartData(foodWasteData)
-  const pieChartData2 = preparePieChartData2(foodWasteData)
-  const foodCategoryData = prepareBarChartData(foodWasteData, 'foodCategory')
-  const dishesWastedData = prepareBarChartData(foodWasteData, 'dishesWasted')
-  const stageOfWasteData = prepareBarChartData(foodWasteData, 'wasteStage')
-  const lineChartData = prepareLineChartData(foodWasteData)
-  const scatterChartData = prepareScatterChartData(foodWasteData)
+  const filterDataByMonth = (data: FoodWasteData[], month: string | undefined) => {
+    if (!month) return data
+    return data.filter(item => getMonthYear(item.dateOfWaste) === month)
+  }
+
+  const pieChartData = preparePieChartData(filterDataByMonth(foodWasteData, selectedMonth1))
+  const pieChartData2 = preparePieChartData2(filterDataByMonth(foodWasteData, selectedMonth1))
+  const foodCategoryData = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth1), 'foodCategory')
+  const dishesWastedData = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth1), 'dishesWasted')
+  const stageOfWasteData = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth1), 'wasteStage')
+  const lineChartData = prepareLineChartData(filterDataByMonth(foodWasteData, selectedMonth1))
+  const scatterChartData = prepareScatterChartData(filterDataByMonth(foodWasteData, selectedMonth1))
+
+  const pieChartData_2 = preparePieChartData(filterDataByMonth(foodWasteData, selectedMonth2))
+  const pieChartData2_2 = preparePieChartData2(filterDataByMonth(foodWasteData, selectedMonth2))
+  const foodCategoryData_2 = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth2), 'foodCategory')
+  const dishesWastedData_2 = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth2), 'dishesWasted')
+  const stageOfWasteData_2 = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth2), 'wasteStage')
+  const lineChartData_2 = prepareLineChartData(filterDataByMonth(foodWasteData, selectedMonth2))
+  const scatterChartData_2 = prepareScatterChartData(filterDataByMonth(foodWasteData, selectedMonth2))
+
+  const monthlyData = aggregateDataByMonth(foodWasteData)
+  const months = Object.keys(monthlyData).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
 
   const contextValue: HomeContextType = {
     foodWasteData,
@@ -186,7 +231,7 @@ export function HomeView() {
     COLORS
   }
 
-  const chartRef = useRef<HTMLDivElement>(null)
+  const chartRef =    useRef<HTMLDivElement>(null)
   const handleChartClick = useCallback((chartType: ChartType) => {
     setSelectedChart(chartType)
   }, [])
@@ -205,120 +250,121 @@ export function HomeView() {
   }, [handleOutsideClick])
 
   const renderChart = (chartType: ChartType) => {
-    const commonProps = {
-      width: 600,
-      height: 300,
-      margin: { top: 5, right: 30, left: 5, bottom: 5 },
-    };
-
     switch (chartType) {
       case 'pie1':
-        return <CustomPieChart onClick={() => handleChartClick('pie1')} />
+        return (
+          <CustomPieChart
+            onClick={() => handleChartClick('pie1')}
+            data1={pieChartData}
+            data2={selectedMonth2 ? pieChartData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            colors={COLORS}
+          />
+        )
       case 'pie2':
-        return <CustomPieChart2 onClick={() => handleChartClick('pie2')} />
+        return (
+          <CustomPieChart2
+            onClick={() => handleChartClick('pie2')}
+            data1={pieChartData2}
+            data2={selectedMonth2 ? pieChartData2_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            colors={COLORS}
+          />
+        )
       case 'bar1':
         return (
-          <ResponsiveContainer {...commonProps}>
-            <BarChart data={foodCategoryData} onClick={() => handleChartClick('bar1')}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" label={{ value: 'Food Category', position: 'insideBottom', offset: -5 }} />
-              <YAxis label={{ value: 'Quantity of Food Waste (kg)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#8884d8" name="Quantity (kg)" />
-            </BarChart>
-          </ResponsiveContainer>
+          <CustomBarChart
+            onClick={() => handleChartClick('bar1')}
+            data1={foodCategoryData}
+            data2={selectedMonth2 ? foodCategoryData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            title="Quantity of Food Waste (kg) vs. Food Category"
+            xAxisLabel="Food Category"
+            yAxisLabel="Quantity of Food Waste (kg)"
+          />
         )
       case 'bar2':
         return (
-          <ResponsiveContainer {...commonProps}>
-            <BarChart data={dishesWastedData} onClick={() => handleChartClick('bar2')}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" label={{ value: 'Dishes Wasted', position: 'insideBottom', offset: -5 }} />
-              <YAxis label={{ value: 'Cost of Wasted Food', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#82ca9d" name="Cost ($)" />
-            </BarChart>
-          </ResponsiveContainer>
+          <CustomBarChart
+            onClick={() => handleChartClick('bar2')}
+            data1={dishesWastedData}
+            data2={selectedMonth2 ? dishesWastedData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            title="Cost of Wasted Food vs. Dishes Wasted"
+            xAxisLabel="Dishes Wasted"
+            yAxisLabel="Cost of Wasted Food ($)"
+          />
         )
       case 'bar3':
         return (
-          <ResponsiveContainer {...commonProps}>
-            <BarChart data={stageOfWasteData} onClick={() => handleChartClick('bar3')}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" label={{ value: 'Stage of Waste', position: 'insideBottom', offset: -5 }} />
-              <YAxis label={{ value: 'Quantity of Food Waste', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#ffc658" name="Quantity (kg)" />
-            </BarChart>
-          </ResponsiveContainer>
+          <CustomBarChart
+            onClick={() => handleChartClick('bar3')}
+            data1={stageOfWasteData}
+            data2={selectedMonth2 ? stageOfWasteData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            title="Quantity of Food Waste vs. Stage of Waste"
+            xAxisLabel="Stage of Waste"
+            yAxisLabel="Quantity of Food Waste (kg)"
+          />
         )
       case 'line1':
         return (
-          <ResponsiveContainer {...commonProps}>
-            <LineChart data={lineChartData} onClick={() => handleChartClick('line1')}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" label={{ value: 'Date of Waste', position: 'insideBottom', offset: -5 }} />
-              <YAxis label={{ value: 'Quantity of Food Waste (kg)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="quantity" stroke="#8884d8" name="Quantity (kg)" />
-            </LineChart>
-          </ResponsiveContainer>
+          <CustomCurveChart
+            onClick={() => handleChartClick('line1')}
+            data1={lineChartData}
+            data2={selectedMonth2 ? lineChartData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            title="Date of Waste vs. Quantity of Food Waste"
+            xAxisLabel="Date"
+            yAxisLabel="Quantity of Food Waste (kg)"
+            dataKey="quantity"
+          />
         )
       case 'line2':
         return (
-          <ResponsiveContainer {...commonProps}>
-            <LineChart data={lineChartData} onClick={() => handleChartClick('line2')}>
-              <CartesianGrid strokeDasharray="3 3" className="w-full" />
-              <XAxis 
-                dataKey="date" 
-                type="category" 
-                label={{ value: 'Date of Waste', position: 'insideBottom', offset: -5 }} 
-              />
-              <YAxis 
-                dataKey="cost" 
-                type="number" 
-                label={{ value: 'Cost of Wasted Food ($)', angle: -90, position: 'insideLeft', offset: -5 }} 
-              />
-              
-              <Tooltip />
-              <Legend />
-              
-              <Line 
-                type="monotone" 
-                dataKey="cost" 
-                stroke="#82ca9d" 
-                name="Cost ($)" 
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <CustomCurveChart
+            onClick={() => handleChartClick('line2')}
+            data1={lineChartData}
+            data2={selectedMonth2 ? lineChartData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            title="Date of Waste vs. Cost of Wasted Food"
+            xAxisLabel="Date"
+            yAxisLabel="Cost of Wasted Food ($)"
+            dataKey="cost"
+          />
         )
       case 'scatter1':
         return (
-          <ResponsiveContainer {...commonProps}>
-            <ScatterChart onClick={() => handleChartClick('scatter1')}>
-              <CartesianGrid />
-              <XAxis type="number" dataKey="cost" name="Cost ($)" label={{ value: 'Cost ($)', position: 'insideBottom', offset: -5 }} />
-              <YAxis type="number" dataKey="quantity" name="Quantity (kg)" label={{ value: 'Quantity (kg)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-              <Scatter name="Food Waste" data={scatterChartData} fill="#8884d8" />
-            </ScatterChart>
-          </ResponsiveContainer>
+          <CustomScatterChart
+            onClick={() => handleChartClick('scatter1')}
+            data1={scatterChartData}
+            data2={selectedMonth2 ? scatterChartData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            title="Cost of Wasted Food vs. Quantity of Food Waste"
+            xAxisLabel="Cost ($)"
+            yAxisLabel="Quantity (kg)"
+          />
         )
       case 'scatter2':
         return (
-          <ResponsiveContainer {...commonProps}>
-            <ScatterChart onClick={() => handleChartClick('scatter2')}>
-              <CartesianGrid />
-              <XAxis dataKey="cost" type="number" name="Cost ($)" label={{ value: 'Cost ($)', position: 'insideBottom', offset: -5 }} />
-              <YAxis dataKey="temperature" type="category" name="Temperature" label={{ value: 'Temperature', angle: -90, position: 'insideLeft' }} />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-              <Scatter name="Food Waste" data={scatterChartData} fill="#82ca9d" />
-            </ScatterChart>
-          </ResponsiveContainer>
+          <CustomScatterChart
+            onClick={() => handleChartClick('scatter2')}
+            data1={scatterChartData}
+            data2={selectedMonth2 ? scatterChartData_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            title="Cost of Wasted Food vs. Temperature Factor"
+            xAxisLabel="Cost ($)"
+            yAxisLabel="Temperature"
+          />
         )
       default:
         return null
@@ -326,21 +372,20 @@ export function HomeView() {
   }
 
   const getPossibleFactors = (): string[] => {
-    const factors = new Set<string>();
+    const factors = new Set<string>()
     foodWasteData.forEach(item => {
       if(item.relevantEvents === 'Other' && item.otherRelevantEvents != null){
-        factors.add(item.otherRelevantEvents);
+        factors.add(item.otherRelevantEvents)
       }
       if (item.relevantEvents !== 'None' && item.relevantEvents != 'Other') {
-        
-        factors.add(item.relevantEvents);
+        factors.add(item.relevantEvents)
       }
-    });
-    return Array.from(factors);
-  };
+    })
+    return Array.from(factors)
+  }
 
-  const totalWaste = foodWasteData.reduce((sum, item) => sum + item.quantity, 0);
-  const totalCost = foodWasteData.reduce((sum, item) => sum + item.cost, 0);
+  const totalWaste = foodWasteData.reduce((sum, item) => sum + item.quantity, 0)
+  const totalCost = foodWasteData.reduce((sum, item) => sum + item.cost, 0)
   const recordCount = foodWasteData.length
   
   return (
@@ -350,8 +395,16 @@ export function HomeView() {
         <div className="grid gap-4 mb-6 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Total Waste</CardTitle>
-              <Trash2 className="w-4 h-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+              {`Total Waste ${
+                selectedMonth1 && selectedMonth2
+                  ? `from ${selectedMonth1} to ${selectedMonth2}`
+                  : selectedMonth1
+                  ? `for ${selectedMonth1}`
+                  : ``
+              }`}
+            </CardTitle>              
+            <Popcorn className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalWaste.toFixed(2)} kg</div>
@@ -360,7 +413,7 @@ export function HomeView() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <PhilippinePeso className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${totalCost.toFixed(2)}</div>
@@ -375,6 +428,38 @@ export function HomeView() {
               <div className="text-2xl font-bold">{recordCount}</div>
             </CardContent>
           </Card>
+        </div>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <Label htmlFor="month1">Select First Month</Label>
+            <Select onValueChange={setSelectedMonth1} value={selectedMonth1}>
+              <SelectTrigger id="month1">
+                <SelectValue>{selectedMonth1}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="month2">Select Second Month</Label>
+            <Select onValueChange={setSelectedMonth2} value={selectedMonth2}>
+              <SelectTrigger id="month2">
+                <SelectValue placeholder="Select a month">{selectedMonth2}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div ref={chartRef} className="space-y-8">
           {selectedChart ? (
@@ -407,14 +492,14 @@ export function HomeView() {
           {selectedChart && (
             <Card>
               <CardHeader>
-                <CardTitle>Possible Factors</CardTitle>
-                <CardDescription>Factors contributing to food waste</CardDescription>
+                <CardTitle>Events happened during this time</CardTitle>
+                <CardDescription>These events might have played a role in contributing to Food Waste</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Factor</TableHead>
+                      <TableHead>Events</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -447,9 +532,9 @@ function getChartTitle(chartType: ChartType): string {
     case 'bar3':
       return 'Quantity of Food Waste vs. Stage of Waste'
     case 'line1':
-      return 'Date of Waste vs. Quantity of Food Waste (kg)'
+      return 'Date of Waste vs. Quantity of Food Waste'
     case 'line2':
-      return 'Cost of Wasted Food vs. Date of Waste'
+      return 'Date of Waste vs. Cost of Wasted Food'
     case 'scatter1':
       return 'Cost of Wasted Food vs. Quantity of Food Waste'
     case 'scatter2':

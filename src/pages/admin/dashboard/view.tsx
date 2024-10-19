@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Trash2, DollarSign, FileText, Users, UserCheck, Clock } from 'lucide-react'
+import { FileText, Users, UserCheck, Clock, Popcorn, PhilippinePeso } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserType } from '@/lib/interface'
 import { getStat, getUsers } from '@/lib/api'
@@ -141,7 +141,7 @@ export default function ComprehensiveDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">Total Waste</CardTitle>
-                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                <Popcorn className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalWaste.toFixed(2)} kg</div>
@@ -150,7 +150,7 @@ export default function ComprehensiveDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-                <DollarSign className="w-4 h-4 text-muted-foreground" />
+                <PhilippinePeso className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">${totalCost.toFixed(2)}</div>
