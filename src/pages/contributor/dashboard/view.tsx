@@ -94,7 +94,7 @@ export default function ContributorDashboardView() {
                   <TableCell>{entry.foodCategory.join(', ')}</TableCell>
                   <TableCell>{entry.dishesWasted.join(', ')}</TableCell>
                   <TableCell>{entry.quantity}</TableCell>
-                  <TableCell>${entry.cost.toFixed(2)}</TableCell>
+                  <TableCell>₱{entry.cost.toFixed(2)}</TableCell>
                   <TableCell>{entry.reasonForWaste.join(', ')}</TableCell>
                   <TableCell>{entry.relevantEvents}</TableCell>
                   <TableCell>{entry.status}</TableCell>

@@ -296,7 +296,7 @@ export function HomeView() {
             month2={selectedMonth2}
             title="Cost of Wasted Food vs. Dishes Wasted"
             xAxisLabel="Dishes Wasted"
-            yAxisLabel="Cost of Wasted Food ($)"
+            yAxisLabel="Cost of Wasted Food (₱)"
           />
         )
       case 'bar3':
@@ -336,7 +336,7 @@ export function HomeView() {
             month2={selectedMonth2}
             title="Date of Waste vs. Cost of Wasted Food"
             xAxisLabel="Date"
-            yAxisLabel="Cost of Wasted Food ($)"
+            yAxisLabel="Cost of Wasted Food (₱)"
             dataKey="cost"
           />
         )
@@ -349,7 +349,7 @@ export function HomeView() {
             month1={selectedMonth1}
             month2={selectedMonth2}
             title="Cost of Wasted Food vs. Quantity of Food Waste"
-            xAxisLabel="Cost ($)"
+            xAxisLabel="Cost (₱)"
             yAxisLabel="Quantity (kg)"
           />
         )
@@ -362,7 +362,7 @@ export function HomeView() {
             month1={selectedMonth1}
             month2={selectedMonth2}
             title="Cost of Wasted Food vs. Temperature Factor"
-            xAxisLabel="Cost ($)"
+            xAxisLabel="Cost (₱)"
             yAxisLabel="Temperature"
           />
         )
