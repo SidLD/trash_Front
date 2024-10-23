@@ -447,11 +447,20 @@ export function HomeView() {
           </div>
           <div>
             <Label htmlFor="month2">Select Second Month</Label>
-            <Select onValueChange={setSelectedMonth2} value={selectedMonth2}>
+            <Select onValueChange={(value) => {
+              if(value == 'clear'){
+                setSelectedMonth2(undefined)
+              }else{
+                setSelectedMonth2(value)
+              }
+            }} value={selectedMonth2}>
               <SelectTrigger id="month2">
                 <SelectValue placeholder="Select a month">{selectedMonth2}</SelectValue>
               </SelectTrigger>
               <SelectContent>
+              <SelectItem key={'clear'} value={'clear'}>
+                    Clear Month
+                  </SelectItem>
                 {months.map((month) => (
                   <SelectItem key={month} value={month}>
                     {month}
