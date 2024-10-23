@@ -485,17 +485,15 @@ export function HomeView() {
           ) : (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 ">
               {(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'] as ChartType[]).map((chartType) => (
-                <Card key={chartType} className="p-4">
-                  <CardHeader>
-                  </CardHeader>
-                  <CardContent className="overflow-x-auto">
-                    <div style={{ minWidth: '500px' }}>
-                      {renderChart(chartType)}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              <Card key={chartType} className="p-4">
+                <CardContent className="flex overflow-x-auto">
+                  <div className="flex">
+                    {renderChart(chartType)}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>     
           )}
           {selectedChart && (
             <Card>
