@@ -163,6 +163,7 @@ export function HomeView() {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [selectedMonth1, setSelectedMonth1] = useState<string>(getCurrentMonthYear())
   const [selectedMonth2, setSelectedMonth2] = useState<string | undefined>(undefined)
+  const [selectedCharts, setSelectedCharts] = useState<ChartType[]>(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'])
   
   useEffect(() => {
     const initData = async () => {
@@ -231,7 +232,7 @@ export function HomeView() {
     COLORS
   }
 
-  const chartRef =    useRef<HTMLDivElement>(null)
+  const chartRef = useRef<HTMLDivElement>(null)
   const handleChartClick = useCallback((chartType: ChartType) => {
     setSelectedChart(chartType)
   }, [])
@@ -248,6 +249,14 @@ export function HomeView() {
       document.removeEventListener('mousedown', handleOutsideClick)
     }
   }, [handleOutsideClick])
+
+  const handleChartSelection = (chartType: ChartType) => {
+    setSelectedCharts(prev => 
+      prev.includes(chartType) 
+        ? prev.filter(c => c !== chartType) 
+        : [...prev, chartType]
+    )
+  }
 
   const renderChart = (chartType: ChartType) => {
     switch (chartType) {
@@ -320,6 +329,7 @@ export function HomeView() {
             data2={selectedMonth2 ? lineChartData_2 : undefined}
             month1={selectedMonth1}
             month2={selectedMonth2}
+            
             title="Date of Waste vs. Quantity of Food Waste"
             xAxisLabel="Date"
             yAxisLabel="Quantity of Food Waste (kg)"
@@ -470,6 +480,24 @@ export function HomeView() {
             </Select>
           </div>
         </div>
+        <div className="mb-4">
+          <Label>Select Charts to Display</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'] as ChartType[]).map((chartType) => (
+              <button
+                key={chartType}
+                onClick={() => handleChartSelection(chartType)}
+                className={`px-3 py-1 text-sm rounded ${
+                  selectedCharts.includes(chartType) 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-secondary text-secondary-foreground'
+                }`}
+              >
+                {getChartTitle(chartType)}
+              </button>
+            ))}
+          </div>
+        </div>
         <div ref={chartRef} className="space-y-8">
           {selectedChart ? (
             <Card className="p-4">
@@ -484,16 +512,16 @@ export function HomeView() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 ">
-              {(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'] as ChartType[]).map((chartType) => (
-              <Card key={chartType} className="p-4">
-                <CardContent className="flex overflow-x-auto">
-                  <div className="flex">
-                    {renderChart(chartType)}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>     
+              {selectedCharts.map((chartType) => (
+                <Card key={chartType} className="p-4">
+                  <CardContent className="flex overflow-x-auto">
+                    <div className="flex">
+                      {renderChart(chartType)}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>     
           )}
           {selectedChart && (
             <Card>
