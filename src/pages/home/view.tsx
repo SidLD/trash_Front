@@ -70,7 +70,7 @@ export const HomeContext = createContext<HomeContextType>({
   COLORS: [],
 })
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A4DE6C', '#D0ED57', '#FFA07A', '#20B2AA']
+const COLORS: string[] = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A4DE6C', '#D0ED57', '#FFA07A', '#20B2AA']
 
 const preparePieChartData = (data: FoodWasteData[]): { name: string; value: number }[] => {
   const dishesWastedData = data.reduce((acc: { [key: string]: number }, curr) => {
@@ -133,17 +133,27 @@ const prepareScatterChartData = (data: FoodWasteData[]): { quantity: number; cos
     }))
 }
 
-function getMonthYear(date: string) {
+const prepareDisposalMethodChartData = (data: FoodWasteData[]): { name: string; value: number }[] => {
+  const disposalMethodData = data.reduce((acc: { [key: string]: number }, curr) => {
+    acc[curr.disposalMethod] = (acc[curr.disposalMethod] || 0) + curr.quantity
+    return acc
+  }, {})
+  return Object.entries(disposalMethodData)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+}
+
+function getMonthYear(date: string): string {
   const d = new Date(date)
   return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`
 }
 
-function getCurrentMonthYear() {
+function getCurrentMonthYear(): string {
   const now = new Date()
   return `${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`
 }
 
-function aggregateDataByMonth(data: FoodWasteData[]) {
+function aggregateDataByMonth(data: FoodWasteData[]): Record<string, { totalWaste: number; totalCost: number }> {
   return data.reduce((acc, curr) => {
     const monthYear = getMonthYear(curr.dateOfWaste)
     if (!acc[monthYear]) {
@@ -155,15 +165,15 @@ function aggregateDataByMonth(data: FoodWasteData[]) {
   }, {} as Record<string, { totalWaste: number; totalCost: number }>)
 }
 
-type ChartType = 'pie1' | 'pie2'| 'bar1' | 'bar2' | 'bar3' | 'line1' | 'line2' | 'scatter1' | 'scatter2' | null
+type ChartType = 'all' | 'pie1' | 'pie2' | 'pie3' | 'bar1' | 'bar2' | 'bar3' | 'line1' | 'line2' | 'scatter1' | 'scatter2' | null
 
-export function HomeView() {
+export function HomeView(): JSX.Element {
   const [selectedChart, setSelectedChart] = useState<ChartType>(null)
   const [foodWasteData, setFoodWasteData] = useState<FoodWasteData[]>([])
   const [socket, setSocket] = useState<Socket | null>(null)
   const [selectedMonth1, setSelectedMonth1] = useState<string>(getCurrentMonthYear())
   const [selectedMonth2, setSelectedMonth2] = useState<string | undefined>(undefined)
-  const [selectedCharts, setSelectedCharts] = useState<ChartType[]>(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'])
+  const [selectedCharts, setSelectedCharts] = useState<ChartType[]>(['pie1', 'pie2', 'pie3', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'])
   
   useEffect(() => {
     const initData = async () => {
@@ -189,15 +199,15 @@ export function HomeView() {
   useEffect(() => {
     console.log("test", socket)
     if (socket) {
-      socket.on('update-data', (newData: any) => {
+      socket.on('update-data', (newData: string) => {
         console.log("New data received:", newData)
         setFoodWasteData(prevData => [...prevData, JSON.parse(newData)])
       })
     }
   }, [socket])
 
-  const filterDataByMonth = (data: FoodWasteData[], month: string | undefined) => {
-    if (!month) return data
+  const filterDataByMonth = (data: FoodWasteData[], month: string | undefined): FoodWasteData[] => {
+    if (!month || month === 'all') return data
     return data.filter(item => getMonthYear(item.dateOfWaste) === month)
   }
 
@@ -208,6 +218,7 @@ export function HomeView() {
   const stageOfWasteData = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth1), 'wasteStage')
   const lineChartData = prepareLineChartData(filterDataByMonth(foodWasteData, selectedMonth1))
   const scatterChartData = prepareScatterChartData(filterDataByMonth(foodWasteData, selectedMonth1))
+  const disposalMethodData = prepareDisposalMethodChartData(filterDataByMonth(foodWasteData, selectedMonth1))
 
   const pieChartData_2 = preparePieChartData(filterDataByMonth(foodWasteData, selectedMonth2))
   const pieChartData2_2 = preparePieChartData2(filterDataByMonth(foodWasteData, selectedMonth2))
@@ -216,9 +227,10 @@ export function HomeView() {
   const stageOfWasteData_2 = prepareBarChartData(filterDataByMonth(foodWasteData, selectedMonth2), 'wasteStage')
   const lineChartData_2 = prepareLineChartData(filterDataByMonth(foodWasteData, selectedMonth2))
   const scatterChartData_2 = prepareScatterChartData(filterDataByMonth(foodWasteData, selectedMonth2))
+  const disposalMethodData_2 = prepareDisposalMethodChartData(filterDataByMonth(foodWasteData, selectedMonth2))
 
   const monthlyData = aggregateDataByMonth(foodWasteData)
-  const months = Object.keys(monthlyData).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+  const months = ['all', ...Object.keys(monthlyData).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())]
 
   const contextValue: HomeContextType = {
     foodWasteData,
@@ -250,15 +262,7 @@ export function HomeView() {
     }
   }, [handleOutsideClick])
 
-  const handleChartSelection = (chartType: ChartType) => {
-    setSelectedCharts(prev => 
-      prev.includes(chartType) 
-        ? prev.filter(c => c !== chartType) 
-        : [...prev, chartType]
-    )
-  }
-
-  const renderChart = (chartType: ChartType) => {
+  const renderChart = (chartType: ChartType): JSX.Element | null => {
     switch (chartType) {
       case 'pie1':
         return (
@@ -277,6 +281,17 @@ export function HomeView() {
             onClick={() => handleChartClick('pie2')}
             data1={pieChartData2}
             data2={selectedMonth2 ? pieChartData2_2 : undefined}
+            month1={selectedMonth1}
+            month2={selectedMonth2}
+            colors={COLORS}
+          />
+        )
+      case 'pie3':
+        return (
+          <CustomPieChart
+            onClick={() => handleChartClick('pie3')}
+            data1={disposalMethodData}
+            data2={selectedMonth2 ? disposalMethodData_2 : undefined}
             month1={selectedMonth1}
             month2={selectedMonth2}
             colors={COLORS}
@@ -329,7 +344,6 @@ export function HomeView() {
             data2={selectedMonth2 ? lineChartData_2 : undefined}
             month1={selectedMonth1}
             month2={selectedMonth2}
-            
             title="Date of Waste vs. Quantity of Food Waste"
             xAxisLabel="Date"
             yAxisLabel="Quantity of Food Waste (kg)"
@@ -387,7 +401,7 @@ export function HomeView() {
       if(item.relevantEvents === 'Other' && item.otherRelevantEvents != null){
         factors.add(item.otherRelevantEvents)
       }
-      if (item.relevantEvents !== 'None' && item.relevantEvents != 'Other') {
+      if (item.relevantEvents !== 'None' && item.relevantEvents !== 'Other') {
         factors.add(item.relevantEvents)
       }
     })
@@ -444,12 +458,12 @@ export function HomeView() {
             <Label htmlFor="month1">Select First Month</Label>
             <Select onValueChange={setSelectedMonth1} value={selectedMonth1}>
               <SelectTrigger id="month1">
-                <SelectValue>{selectedMonth1}</SelectValue>
+                <SelectValue>{selectedMonth1 === 'all' ? 'All Months' : selectedMonth1}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {months.map((month) => (
                   <SelectItem key={month} value={month}>
-                    {month}
+                    {month === 'all' ? 'All Months' : month}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -457,23 +471,14 @@ export function HomeView() {
           </div>
           <div>
             <Label htmlFor="month2">Select Second Month</Label>
-            <Select onValueChange={(value) => {
-              if(value == 'clear'){
-                setSelectedMonth2(undefined)
-              }else{
-                setSelectedMonth2(value)
-              }
-            }} value={selectedMonth2}>
+            <Select onValueChange={(value) => setSelectedMonth2(value === 'all' ? undefined : value)} value={selectedMonth2 || 'all'}>
               <SelectTrigger id="month2">
-                <SelectValue placeholder="Select a month">{selectedMonth2}</SelectValue>
+                <SelectValue>{selectedMonth2 || 'All Months'}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-              <SelectItem key={'clear'} value={'clear'}>
-                    Clear Month
-                  </SelectItem>
                 {months.map((month) => (
                   <SelectItem key={month} value={month}>
-                    {month}
+                    {month === 'all' ? 'All Months' : month}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -481,22 +486,29 @@ export function HomeView() {
           </div>
         </div>
         <div className="mb-4">
-          <Label>Select Charts to Display</Label>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {(['pie1', 'pie2', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'] as ChartType[]).map((chartType) => (
-              <button
-                key={chartType}
-                onClick={() => handleChartSelection(chartType)}
-                className={`px-3 py-1 text-sm rounded ${
-                  selectedCharts.includes(chartType) 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-secondary text-secondary-foreground'
-                }`}
-              >
-                {getChartTitle(chartType)}
-              </button>
-            ))}
-          </div>
+          <Label htmlFor="chartSelection">Select Charts to Display</Label>
+          <Select
+            onValueChange={(value) => {
+              if (value === 'all') {
+                setSelectedCharts(['pie1', 'pie2', 'pie3', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2']);
+              } else {
+                const selectedValues = Array.isArray(value) ? value : [value];
+                setSelectedCharts(selectedValues as ChartType[]);
+              }
+            }}
+          >
+            <SelectTrigger id="chartSelection">
+              <SelectValue placeholder="Select charts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Charts</SelectItem>
+              {(['pie1', 'pie2', 'pie3', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'] as const).map((chartType) => (
+                <SelectItem key={chartType} value={chartType}>
+                  {getChartTitle(chartType)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div ref={chartRef} className="space-y-8">
           {selectedChart ? (
@@ -555,10 +567,14 @@ export function HomeView() {
 
 function getChartTitle(chartType: ChartType): string {
   switch (chartType) {
+    case 'all':
+      return 'All Charts'
     case 'pie1':
       return 'Food Waste by Dish'
     case 'pie2':
       return 'Reasons for Food Waste'
+    case 'pie3':
+      return 'Food Waste by Disposal Method'
     case 'bar1':
       return 'Quantity of Food Waste (kg) vs. Food Category'
     case 'bar2':
