@@ -59,7 +59,7 @@ export default function FoodWasteApproval() {
 
   const handleReject = async (_id: string) => {
     try {
-      await updateRecordStatus(_id, {status: 'APPROVED'}).then(() => {
+      await updateRecordStatus(_id, {status: 'REJECTED'}).then(() => {
         setRecords(records.map(record => 
           record._id === _id ? { ...record, status: 'REJECTED' } : record
         ))
