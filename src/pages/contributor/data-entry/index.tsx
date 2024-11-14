@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { createRecord } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/toaster'
+import { useNavigate } from 'react-router-dom'
 
 const formSchema = z.object({
   dateOfWaste: z.string().nonempty('Date of Waste is required'),
@@ -49,7 +50,7 @@ const disposalMethods = ['Thrown Away & to be Collected', 'Composted', 'Used for
 const relevantEvents = ['University Intramurals', 'City Festival', 'Charity Events', 'Foundation Day', 'Acquaintance Party', 'Other']
 
 export default function ContributorDataEntry() {
-
+  const navigate = useNavigate()
   const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -65,10 +66,12 @@ export default function ContributorDataEntry() {
     try {
       console.log('Form Data:', formData)
       const {data} = await createRecord(formData) as unknown as any;
+      
       toast({
         title: "Success",
         description: "New Data",
       })
+      navigate('/contributor')
       console.log(data)
     } catch (error) {
       toast({
