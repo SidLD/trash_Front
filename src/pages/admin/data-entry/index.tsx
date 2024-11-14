@@ -33,7 +33,7 @@ type FoodWasteRecord = {
   relevantEvents?: string
   otherRelevantEvents? : string
   additionalComments?: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: 'PENDING' | 'APPROVED' | 'DECLINED'
   userId: UserType
 }
 
@@ -65,9 +65,9 @@ export default function FoodWasteApproval() {
 
   const handleReject = async (_id: string) => {
     try {
-      await updateRecordStatus(_id, {status: 'REJECTED'}).then(() => {
+      await updateRecordStatus(_id, {status: 'DECLINED'}).then(() => {
         setRecords(records.map(record => 
-          record._id === _id ? { ...record, status: 'REJECTED' } : record
+          record._id === _id ? { ...record, status: 'DECLINED' } : record
         ))
       setSelectedRecord(null)
       })
@@ -177,7 +177,7 @@ export default function FoodWasteApproval() {
                 <TableCell>
                   <Badge 
                     variant={record.status === 'APPROVED' ? 'default' : 
-                             record.status === 'REJECTED' ? 'destructive' : 'secondary'}
+                             record.status === 'DECLINED' ? 'destructive' : 'secondary'}
                   >
                     {record.status}
                   </Badge>
@@ -292,7 +292,7 @@ export default function FoodWasteApproval() {
                               <h4 className="font-semibold">Status:</h4>
                               <Badge 
                                 variant={selectedRecord.status === 'APPROVED' ? 'default' : 
-                                         selectedRecord.status === 'REJECTED' ? 'destructive' : 'secondary'}
+                                         selectedRecord.status === 'DECLINED' ? 'destructive' : 'secondary'}
                               >
                                 {selectedRecord.status}
                               </Badge>
