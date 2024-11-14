@@ -27,7 +27,6 @@ type FoodWasteRecord = {
   temperature: string
   mealType: string
   wasteStage: string
-  preventable: string
   disposalMethod: string
   otherDisposalMethod?: string
   environmentalConditions?: string
@@ -45,12 +44,19 @@ export default function FoodWasteApproval() {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined)
   const [stallFilter, setStallFilter] = useState('')
 
+  useEffect(() => {
+    if(!selectedRecord){
+
+    }
+  }, [selectedRecord])
+
   const handleApprove = async (_id: string) => {
     try {
       await updateRecordStatus(_id, {status: 'APPROVED'}).then(() => {
         setRecords(records.map(record => 
           record._id === _id ? { ...record, status: 'APPROVED' } : record
         ))
+        setSelectedRecord(null)
       })
     } catch (error) {
       console.log(error)
@@ -63,6 +69,21 @@ export default function FoodWasteApproval() {
         setRecords(records.map(record => 
           record._id === _id ? { ...record, status: 'REJECTED' } : record
         ))
+      setSelectedRecord(null)
+      })
+    } catch (error) {
+      console.log(error)
+    }
+    
+  }
+
+  const handlePending = async (_id: string) => {
+    try {
+      await updateRecordStatus(_id, {status: 'APPROVED'}).then(() => {
+        setRecords(records.map(record => 
+          record._id === _id ? { ...record, status: 'PENDING' } : record
+        ))
+        setSelectedRecord(null)
       })
     } catch (error) {
       console.log(error)
@@ -164,7 +185,7 @@ export default function FoodWasteApproval() {
                 <TableCell className="text-right">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="mr-2" onClick={() => setSelectedRecord(record)}>
+                      <Button variant="outline" size="sm" className="mr-2" onClick={() => setSelectedRecord(record)} >
                         View
                       </Button>
                     </DialogTrigger>
@@ -238,10 +259,7 @@ export default function FoodWasteApproval() {
                               <h4 className="font-semibold">Waste Stage:</h4>
                               <p>{selectedRecord.wasteStage}</p>
                             </div>
-                            <div>
-                              <h4 className="font-semibold">Preventable:</h4>
-                              <p>{selectedRecord.preventable}</p>
-                            </div>
+  
                             <div>
                               <h4 className="font-semibold">Disposal Method:</h4>
                               <p>{selectedRecord.disposalMethod}</p>
@@ -291,7 +309,17 @@ export default function FoodWasteApproval() {
                           }}
                           disabled={selectedRecord?.status !== 'PENDING'}
                         >
-                          Reject
+                          Disapprove
+                        </Button>
+                        <Button 
+                          className='ml-2 bg-green-500'
+                          onClick={() => {
+                            handlePending(selectedRecord!._id)
+                            setSelectedRecord(null)
+                          }}
+                          disabled={selectedRecord?.status == 'PENDING'}
+                        >
+                          Move To Pending
                         </Button>
                         <Button 
                           onClick={() => {
@@ -312,6 +340,14 @@ export default function FoodWasteApproval() {
                     disabled={record.status !== 'PENDING'}
                   >
                     Approve
+                  </Button>
+                  <Button 
+                    className='ml-2 bg-green-500'
+                    size="sm" 
+                    onClick={() => handlePending(record._id)}
+                    disabled={record.status == 'PENDING'}
+                  >
+                    Move to Pending
                   </Button>
                 </TableCell>
               </TableRow>

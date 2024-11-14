@@ -35,7 +35,7 @@ export const CustomCurveChart2: React.FC<CustomCurveChartProps> = ({
   }
 
   const formatYAxis = (value: number) => {
-    return dataKey === 'cost' ? `$${value.toFixed(2)}` : value.toFixed(2)
+    return dataKey === 'cost' ? `₱${value.toFixed(2)}` : value.toFixed(2)
   }
 
   return (

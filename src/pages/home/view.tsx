@@ -4,6 +4,7 @@ import { createContext, useCallback, useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { CustomPieChart } from './_components/CustomPieChart'
 import { CustomPieChart2 } from './_components/CustomPieChart2'
+import { CustomPieChart3 } from './_components/CustomPieChart3'
 import { CustomCurveChart } from './_components/CustomCurveChart'
 import { CustomBarChart } from './_components/CustomLineChart1'
 import { CustomScatterChart } from './_components/CustomScatterChart'
@@ -288,7 +289,7 @@ export function HomeView(): JSX.Element {
         )
       case 'pie3':
         return (
-          <CustomPieChart
+          <CustomPieChart3
             onClick={() => handleChartClick('pie3')}
             data1={disposalMethodData}
             data2={selectedMonth2 ? disposalMethodData_2 : undefined}
@@ -513,9 +514,6 @@ export function HomeView(): JSX.Element {
         <div ref={chartRef} className="space-y-8">
           {selectedChart ? (
             <Card className="p-4">
-              <CardHeader>
-                <CardTitle>{getChartTitle(selectedChart)}</CardTitle>
-              </CardHeader>
               <CardContent className="overflow-x-auto">
                 <div style={{ minWidth: '500px' }}>
                   {renderChart(selectedChart)}

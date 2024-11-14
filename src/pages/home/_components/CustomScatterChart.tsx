@@ -55,7 +55,7 @@ export const CustomScatterChart: React.FC<CustomScatterChartProps> = ({
               <XAxis 
                 type="number" 
                 dataKey="cost" 
-                name="Cost ($)" 
+                name="Cost (₱)" 
                 label={{ value: xAxisLabel, position: 'insideBottom', offset: -5 }} 
               />
               <YAxis 

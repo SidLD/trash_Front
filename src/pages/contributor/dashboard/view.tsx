@@ -2,10 +2,8 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/toaster'
-import { deleteRecord, getContributorStat } from '@/lib/api'
+import { getContributorStat } from '@/lib/api'
 
 interface FoodWasteEntry {
   _id: string;
@@ -21,7 +19,6 @@ interface FoodWasteEntry {
 
 
 export default function ContributorDashboardView() {
-  const {toast} = useToast()
   const [entries, setEntries] = useState<FoodWasteEntry[]>([])
 
   const fetchEntries = async () => {
@@ -33,23 +30,23 @@ export default function ContributorDashboardView() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteRecord({recordId: id})
-      await fetchEntries()
-      toast({
-        title: "Entry Deleted",
-        description: "The food waste entry has been successfully deleted.",
-      })
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to delete the entry. Please try again.",
-        variant: "destructive",
-      })
-      console.error('Error deleting entry:', err)
-    }
-  }
+  // const handleDelete = async (id: string) => {
+  //   try {
+  //     await deleteRecord({recordId: id})
+  //     await fetchEntries()
+  //     toast({
+  //       title: "Entry Deleted",
+  //       description: "The food waste entry has been successfully deleted.",
+  //     })
+  //   } catch (err) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to delete the entry. Please try again.",
+  //       variant: "destructive",
+  //     })
+  //     console.error('Error deleting entry:', err)
+  //   }
+  // }
 
   useEffect(() => {
     void fetchEntries()
@@ -84,7 +81,6 @@ export default function ContributorDashboardView() {
                 <TableHead>Reasons</TableHead>
                 <TableHead>Relevant Event</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -98,15 +94,7 @@ export default function ContributorDashboardView() {
                   <TableCell>{entry.reasonForWaste.join(', ')}</TableCell>
                   <TableCell>{entry.relevantEvents}</TableCell>
                   <TableCell>{entry.status}</TableCell>
-                  <TableCell>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => handleDelete(entry._id)}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
+
                 </TableRow>
               ))}
             </TableBody>

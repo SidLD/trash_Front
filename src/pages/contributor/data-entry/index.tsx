@@ -28,7 +28,6 @@ const formSchema = z.object({
   temperature: z.string().nonempty('Temperature is required'),
   mealType: z.string().nonempty('Meal type is required'),
   wasteStage: z.string().nonempty('Waste stage is required'),
-  preventable: z.string().nonempty('This field is required'),
   disposalMethod: z.string().nonempty('Disposal method is required'),
   otherDisposalMethod: z.string().optional(),
   environmentalConditions: z.string().optional(),
@@ -471,31 +470,6 @@ export default function ContributorDataEntry() {
                       <p>Retail Stage is when FW was on the side of Restaurants and Food Courts while Consumer Stage is when FW was on the side of the Customer or Consumer.</p>
                     </TooltipContent>
                   </Tooltip>
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="preventable"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Was the Food Waste Preventable?</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Yes or No" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  In your opinion, could this waste have been avoided?
                 </FormDescription>
                 <FormMessage />
               </FormItem>

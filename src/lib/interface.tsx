@@ -43,7 +43,6 @@ export interface FoodWasteType {
     temperature: string; // Temperature at which the food was stored
     mealType: string; // Type of meal (e.g., breakfast, lunch, dinner)
     wasteStage: string; // Stage of waste (e.g., production, consumption, disposal)
-    preventable: string; // Indicates if the waste was preventable
     disposalMethod: string; // Method of disposal
     otherDisposalMethod?: string; // Optional field for additional disposal method
     environmentalConditions?: string; // Optional environmental conditions during disposal
