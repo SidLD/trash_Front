@@ -409,9 +409,14 @@ export function HomeView(): JSX.Element {
     return Array.from(factors)
   }
 
-  const totalWaste = foodWasteData.reduce((sum, item) => sum + item.quantity, 0)
-  const totalCost = foodWasteData.reduce((sum, item) => sum + item.cost, 0)
-  const recordCount = foodWasteData.length
+  const filteredData = filterDataByMonth(foodWasteData, selectedMonth1)
+  const filteredData2 = selectedMonth2 ? filterDataByMonth(foodWasteData, selectedMonth2) : []
+  
+  const totalWaste = filteredData.reduce((sum, item) => sum + item.quantity, 0) + 
+                     filteredData2.reduce((sum, item) => sum + item.quantity, 0)
+  const totalCost = filteredData.reduce((sum, item) => sum + item.cost, 0) + 
+                    filteredData2.reduce((sum, item) => sum + item.cost, 0)
+  const recordCount = filteredData.length + filteredData2.length
   
   return (
     <HomeContext.Provider value={contextValue}>

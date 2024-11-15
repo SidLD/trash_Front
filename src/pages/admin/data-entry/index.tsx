@@ -44,12 +44,6 @@ export default function FoodWasteApproval() {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined)
   const [stallFilter, setStallFilter] = useState('')
 
-  useEffect(() => {
-    if(!selectedRecord){
-
-    }
-  }, [selectedRecord])
-
   const handleApprove = async (_id: string) => {
     try {
       await updateRecordStatus(_id, {status: 'APPROVED'}).then(() => {
@@ -74,7 +68,6 @@ export default function FoodWasteApproval() {
     } catch (error) {
       console.log(error)
     }
-    
   }
 
   const handlePending = async (_id: string) => {
@@ -92,6 +85,7 @@ export default function FoodWasteApproval() {
   }
 
   const filteredRecords = records.filter(record => {
+    console.log(record)
     const matchesSearch = 
       record.userId.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.userId.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
