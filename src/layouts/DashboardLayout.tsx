@@ -49,7 +49,12 @@ export default function DashboardLayout() {
       title: "Settings",
       roles: ['CONTRIBUTOR']
     },
-    
+    {
+      link:'/admin/report',
+      icon: <FileInput size={20} />,
+      title: "Report",
+      roles: ['ADMIN']
+    },
   ]
   const handleLogout = () => {
     auth.clear()

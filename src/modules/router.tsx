@@ -11,6 +11,8 @@ import AdminDataEntry from "@/pages/admin/data-entry"
 import ContributorDataEntry from "@/pages/contributor/data-entry"
 import AdminSetting from "@/pages/admin/setting"
 import ContributorSetting from "@/pages/contributor/setting"
+import { FoodWasteReport } from "@/pages/admin/report/view"
+
 const routers = createBrowserRouter(
     createRoutesFromElements(
         <>
@@ -26,6 +28,7 @@ const routers = createBrowserRouter(
                     <Route  index  element={<AdminDashboard />}/>
                     <Route  path="user-management"  element={<UserManagement />}/>
                     <Route  path="data-entry"  element={<AdminDataEntry />}/>
+                    <Route  path="report"  element={<FoodWasteReport />}/>
                     <Route  path="setting"  element={<AdminSetting />}/>
                </Route>
                <Route path="/contributor">
