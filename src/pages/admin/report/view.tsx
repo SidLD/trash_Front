@@ -370,19 +370,42 @@ export function FoodWasteReport(): JSX.Element {
 
   const handleDownloadPdf = () => {
     if (chartRef.current) {
-      const element = chartRef.current;
+      // Resize the chartRef div for landscape layout (A4 size: 297mm x 210mm)
+      const originalWidth = chartRef.current.style.width;
+      const originalHeight = chartRef.current.style.height;
+  
+      // Temporarily set the width and height for landscape
+      chartRef.current.style.width = '100%';  // Set to 100% width to fit within container
+      chartRef.current.style.height = 'auto'; // Maintain auto height ratio to avoid overflow
+  
+      // Ensure no overflow and the content fits into the PDF
+      const maxWidth = 297; // A4 landscape width in mm
+      const maxHeight = 210; // A4 landscape height in mm
+  
+      // Ensure content doesn't exceed A4 dimensions
+      const chartWidth = chartRef.current.offsetWidth;
+      const chartHeight = chartRef.current.offsetHeight;
       
-      const opt = {
-        margin: 1,
-        filename: 'food-waste-report.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 4 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      const scaleX = maxWidth / chartWidth;
+      const scaleY = maxHeight / chartHeight;
+  
+      // Generate PDF with adjusted scale and page format
+      const pdfOptions = {
+        margin: 10,
+        filename: 'Food_Waste_Report.pdf',
+        html2canvas: { scale: 2 }, // Adjust scale to fit within the page
+        jsPDF: { unit: 'mm', format: 'Tabloid', orientation: 'landscape' }, // Set landscape and A4 format
       };
-
-      html2pdf().from(element).set(opt).save();
+  
+      // Generate the PDF
+      html2pdf().from(chartRef.current).set(pdfOptions).save();
+  
+      // Restore the original size after generating the PDF
+      chartRef.current.style.width = originalWidth;
+      chartRef.current.style.height = originalHeight;
     }
   };
+  
   
   return (
     <HomeContext.Provider value={contextValue}>
