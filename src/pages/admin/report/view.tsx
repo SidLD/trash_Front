@@ -85,7 +85,6 @@ export function FoodWasteReport(): JSX.Element {
   const [selectedMonth2, setSelectedMonth2] = useState<string | undefined>(undefined)
   const [selectedCharts, setSelectedCharts] = useState<ChartType[]>(['pie1', 'pie2', 'pie3', 'bar1', 'bar2', 'bar3', 'line1', 'line2', 'scatter1', 'scatter2'])
   const [isGenerating] = useState(false)
-  
   useEffect(() => {
     const initData = async () => {
       try {
@@ -388,7 +387,7 @@ export function FoodWasteReport(): JSX.Element {
       
       const scaleX = maxWidth / chartWidth;
       const scaleY = maxHeight / chartHeight;
-  
+      document.getElementById('print-button')?.classList.add('hidden')
       // Generate PDF with adjusted scale and page format
       const pdfOptions = {
         margin: 10,
@@ -403,6 +402,9 @@ export function FoodWasteReport(): JSX.Element {
       // Restore the original size after generating the PDF
       chartRef.current.style.width = originalWidth;
       chartRef.current.style.height = originalHeight;
+      setTimeout(() => {
+        document.getElementById('print-button')?.classList.remove('hidden')
+      }, 1000)
     }
   };
   
@@ -410,43 +412,6 @@ export function FoodWasteReport(): JSX.Element {
   return (
     <HomeContext.Provider value={contextValue}>
         <div className="p-4 mx-auto">
-        <div className="grid gap-4 mb-6 md:grid-cols-3">
-            <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium">
-                {`Total Waste ${
-                selectedMonth1 && selectedMonth2
-                    ? `from ${selectedMonth1} to ${selectedMonth2}`
-                    : selectedMonth1
-                    ? `for ${selectedMonth1}`
-                    : ``
-                }`}
-            </CardTitle>              
-            <Popcorn className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{totalWaste.toFixed(2)} kg</div>
-            </CardContent>
-            </Card>
-            <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-                <PhilippinePeso className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">₱{totalCost.toFixed(2)}</div>
-            </CardContent>
-            </Card>
-            <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-                <FileText className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{recordCount}</div>
-            </CardContent>
-            </Card>
-        </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
             <Label htmlFor="month1">Select First Month</Label>
@@ -504,58 +469,97 @@ export function FoodWasteReport(): JSX.Element {
             </SelectContent>
             </Select>
         </div>
-        <div ref={chartRef} className="space-y-8">
-            {selectedChart ? (
-            <Card className="p-4">
-                <CardContent className="overflow-x-auto">
-                <div style={{ minWidth: '500px' }}>
-                    {renderChart(selectedChart)}
-                </div>
+          <div ref={chartRef}>
+            <div className="grid gap-4 mb-6 md:grid-cols-3">
+                <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                    <CardTitle className="text-sm font-medium">
+                    {`Total Waste ${
+                    selectedMonth1 && selectedMonth2
+                        ? `from ${selectedMonth1} to ${selectedMonth2}`
+                        : selectedMonth1
+                        ? `for ${selectedMonth1}`
+                        : ``
+                    }`}
+                </CardTitle>              
+                <Popcorn className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{totalWaste.toFixed(2)} kg</div>
                 </CardContent>
-            </Card>
-            ) : (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 ">
-                {selectedCharts.map((chartType) => (
-                <Card key={chartType} className="p-4">
-                    <CardContent className="flex overflow-x-auto">
-                    <div className="flex">
-                        {renderChart(chartType)}
+                </Card>
+                <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                    <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+                    <PhilippinePeso className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">₱{totalCost.toFixed(2)}</div>
+                </CardContent>
+                </Card>
+                <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                    <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{recordCount}</div>
+                </CardContent>
+                </Card>
+            </div>
+            <div className="space-y-8">
+                {selectedChart ? (
+                <Card className="p-4">
+                    <CardContent className="overflow-x-auto">
+                    <div style={{ minWidth: '500px' }}>
+                        {renderChart(selectedChart)}
                     </div>
                     </CardContent>
                 </Card>
-                ))}
-            </div>     
-            )}
-            {selectedChart && (
-            <Card>
-                <CardHeader>
-                <CardTitle>Events happened during this time</CardTitle>
-                <CardDescription>These events might have played a role in contributing to Food Waste</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Events</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {getPossibleFactors().map((factor, index) => (
-                        <TableRow key={index}>
-                        <TableCell>{factor}</TableCell>
-                        </TableRow>
+                ) : (
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 ">
+                    {selectedCharts.map((chartType) => (
+                    <Card key={chartType} className="p-4">
+                        <CardContent className="flex overflow-x-auto">
+                        <div className="flex">
+                            {renderChart(chartType)}
+                        </div>
+                        </CardContent>
+                    </Card>
                     ))}
-                    </TableBody>
-                </Table>
-                </CardContent>
-            </Card>
-            )}
-        </div>
-        <div className="flex justify-center w-full py-4 mx-auto mb-4">
-            <Button className='p-8 text-2xl' onClick={handleDownloadPdf} disabled={isGenerating}>
-            {isGenerating ? 'Generating Report...' : 'Generate PDF Report'}
-            </Button>
-        </div>
+                </div>     
+                )}
+                {selectedChart && (
+                <Card>
+                    <CardHeader>
+                    <CardTitle>Events happened during this time</CardTitle>
+                    <CardDescription>These events might have played a role in contributing to Food Waste</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Events</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {getPossibleFactors().map((factor, index) => (
+                            <TableRow key={index}>
+                            <TableCell>{factor}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    </CardContent>
+                </Card>
+                )}
+            </div>
+            <div className="flex justify-center w-full py-4 mx-auto mb-4">
+                <Button className='p-8 text-2xl' onClick={handleDownloadPdf} disabled={isGenerating} id='print-button' >
+                {isGenerating ? 'Generating Report...' : 'Generate PDF Report'}
+                </Button>
+            </div>
+          </div>
         </div>
     </HomeContext.Provider>
   )
