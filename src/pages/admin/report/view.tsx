@@ -376,24 +376,14 @@ export function FoodWasteReport(): JSX.Element {
       // Temporarily set the width and height for landscape
       chartRef.current.style.width = '100%';  // Set to 100% width to fit within container
       chartRef.current.style.height = 'auto'; // Maintain auto height ratio to avoid overflow
-  
-      // Ensure no overflow and the content fits into the PDF
-      const maxWidth = 297; // A4 landscape width in mm
-      const maxHeight = 210; // A4 landscape height in mm
-  
-      // Ensure content doesn't exceed A4 dimensions
-      const chartWidth = chartRef.current.offsetWidth;
-      const chartHeight = chartRef.current.offsetHeight;
-      
-      const scaleX = maxWidth / chartWidth;
-      const scaleY = maxHeight / chartHeight;
+
       document.getElementById('print-button')?.classList.add('hidden')
       // Generate PDF with adjusted scale and page format
       const pdfOptions = {
         margin: 10,
         filename: 'Food_Waste_Report.pdf',
         html2canvas: { scale: 2 }, // Adjust scale to fit within the page
-        jsPDF: { unit: 'mm', format: 'Tabloid', orientation: 'landscape' }, // Set landscape and A4 format
+        jsPDF: { unit: 'mm', format: [300, 400] , orientation: 'landscape' }, // Set landscape and A4 format
       };
   
       // Generate the PDF
@@ -411,7 +401,7 @@ export function FoodWasteReport(): JSX.Element {
   
   return (
     <HomeContext.Provider value={contextValue}>
-        <div className="p-4 mx-auto">
+        <div className="float-left w-full ">
         <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
             <Label htmlFor="month1">Select First Month</Label>
@@ -469,7 +459,7 @@ export function FoodWasteReport(): JSX.Element {
             </SelectContent>
             </Select>
         </div>
-          <div ref={chartRef}>
+          <div>
             <div className="grid gap-4 mb-6 md:grid-cols-3">
                 <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -507,25 +497,13 @@ export function FoodWasteReport(): JSX.Element {
                 </CardContent>
                 </Card>
             </div>
-            <div className="space-y-8">
+            <div  ref={chartRef} className="space-y-8 ">
                 {selectedChart ? (
-                <Card className="p-4">
-                    <CardContent className="overflow-x-auto">
-                    <div style={{ minWidth: '500px' }}>
-                        {renderChart(selectedChart)}
-                    </div>
-                    </CardContent>
-                </Card>
+                  renderChart(selectedChart)
                 ) : (
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 ">
                     {selectedCharts.map((chartType) => (
-                    <Card key={chartType} className="p-4">
-                        <CardContent className="flex overflow-x-auto">
-                        <div className="flex">
-                            {renderChart(chartType)}
-                        </div>
-                        </CardContent>
-                    </Card>
+                     renderChart(chartType)
                     ))}
                 </div>     
                 )}

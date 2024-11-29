@@ -1,6 +1,6 @@
 import {createBrowserRouter, createRoutesFromElements, Navigate, Route} from "react-router-dom"
 import { Home } from "@/pages/home"
-import { PrivateLayout, PublicLayout } from "./module"
+import { PrivateLayout, PrivatePrintLayout, PublicLayout } from "./module"
 import { Login } from "@/pages/login"
 import AboutUs from "@/pages/about-us"
 import { SignUp } from "@/pages/sign-up"
@@ -37,7 +37,9 @@ const routers = createBrowserRouter(
                     <Route  path="setting"  element={<ContributorSetting />}/>
                </Route>
             </Route> 
-
+            <Route element={<PrivatePrintLayout/>} >
+               <Route path="/admin/report" index element={<FoodWasteReport />}/>
+            </Route> 
         </>
     )
 )
