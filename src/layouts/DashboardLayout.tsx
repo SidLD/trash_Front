@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { Home, Users, FileInput, LogOut, Menu, X, Settings2 } from "lucide-react";
+import { Home, Users, FileInput, LogOut, Menu, X, Settings2 } from 'lucide-react';
 import { auth } from "@/lib/services";
+import { Notifications } from './_components/notifications';
+import { Button } from "@/components/ui/button";
 
 export default function DashboardLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -81,26 +83,31 @@ export default function DashboardLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="text-white bg-gray-800">
-        <nav className="container px-4 py-4 mx-auto">
+        <nav className="container flex items-center justify-between px-4 py-4 mx-auto">
           <div className="flex items-center justify-between md:hidden">
             <Link to="/dashboard" className="text-xl font-bold">Dashboard</Link>
             <button onClick={toggleMenu} className="text-white focus:outline-none">
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
-          <ul className={`md:flex md:items-center ${isMenuOpen ? 'block' : 'hidden'} mt-4 md:mt-0`}>
+          <ul className={`md:flex justify-between w-full md:items-center ${isMenuOpen ? 'block' : 'hidden'} mt-4 md:mt-0 ml-auto`}>
             <div className="md:flex md:items-center">
               <NavItems />
             </div>
-            <li className="mt-4 md:mt-0 md:ml-auto">
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2 space-x-2 font-bold text-white transition-colors bg-red-600 rounded hover:bg-red-700 md:w-auto"
-              >
-                <LogOut size={20} />
-                <span>Logout</span>
-              </button>
-            </li>
+            <div className="flex items-center space-x-4">
+                <div className="w-4 h-4">
+                  <Notifications />
+                </div>
+                <Button
+                  variant="ghost"
+                  className='hover:bg-gray-700'
+                  size="icon"
+                  onClick={handleLogout}
+                  aria-label="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+            </div>
           </ul>
         </nav>
       </header>
@@ -110,3 +117,4 @@ export default function DashboardLayout() {
     </div>
   );
 }
+
