@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { Home, Users, FileInput, LogOut, Menu, X, Settings2 } from 'lucide-react';
+import { Home, Users, FileInput, LogOut, Menu, X, Settings2, ClipboardMinus } from 'lucide-react';
 import { auth } from "@/lib/services";
 import { Notifications } from './_components/notifications';
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ export default function DashboardLayout() {
     },
     {
       link:'/admin/report',
-      icon: <FileInput size={20} />,
+      icon: <ClipboardMinus size={20} />,
       title: "Report",
       roles: ['ADMIN']
     },
@@ -95,9 +95,10 @@ export default function DashboardLayout() {
               <NavItems />
             </div>
             <div className="flex items-center space-x-4">
-                <div className="w-4 h-4">
-                  <Notifications />
-                </div>
+                {auth.getRole() == 'CONTRIBUTOR' && 
+                 <div className="w-4 h-4">
+                 <Notifications />
+               </div>}
                 <Button
                   variant="ghost"
                   className='hover:bg-gray-700'

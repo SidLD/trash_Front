@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { useContext } from 'react'
+import { HomeContext } from '../view';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ResponsiveContainer,CartesianGrid, XAxis, YAxis, Scatter, ScatterChart } from 'recharts';
-import { HomeContext } from '../view';
 
 interface CustomCurveChartProps {
   onClick: () => void;

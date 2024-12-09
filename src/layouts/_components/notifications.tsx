@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { intervalToDuration } from 'date-fns';
-import { Bell, Check, CheckCheck, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
+import { Bell, Check, ChevronDown,  ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { io, Socket } from 'socket.io-client';
 import { auth } from '@/lib/services';
+import { getContriNotification, updateNotification } from '@/lib/api';
 
 type NotificationType = {
-  id: number;
+  _id: number;
   title: string;
   description: string;
   isRead: boolean;
@@ -24,7 +24,6 @@ export const Notifications = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [expandedNotifications, setExpandedNotifications] = useState<number[]>([]);
     const [socket, setSocket] = useState<Socket | null>(null);
-    const navigate = useNavigate();
 
     useEffect(() => {
         if (notifications) {
@@ -51,42 +50,44 @@ export const Notifications = () => {
 
     const handleNotification = (data: any) => {
         const newData = JSON.parse(data)
+        console.log(newData)
         setNotifications(prevNotifications => [newData, ...prevNotifications]);
     };
 
     const markAsRead = async (_id: number) => {
         try {
-            // const notification = notifications.find(notif => notif.id === id) as NotificationType;
-            // const { status } = await updateAgentNotificationStatus({ notification, status: true });
-            // if (status === 200) {
-            //     setNotifications(prevNotifications =>
-            //         prevNotifications
-            //             .map(notif => notif.id === id ? { ...notif, isRead: true } : notif)
-            //             .sort((a, b) => {
-            //                 if (a.isRead === b.isRead) {
-            //                     return b.createdAt > a.createdAt ? 1 : -1;
-            //                 }
-            //                 return a.isRead ? 1 : -1;
-            //             })
-            //     );
-            //     setUnreadCount(prev => prev - 1);
-            // }
+            const notification = notifications.find(notif => notif._id === _id) as NotificationType;
+            console.log(notification._id)
+            const { status } = await updateNotification(notification._id.toString(), { isRead: true }) as unknown as any;
+            if (status === 200) {
+                setNotifications(prevNotifications =>
+                    prevNotifications
+                        .map(notif => notif._id === _id ? { ...notif, isRead: true } : notif)
+                        .sort((a, b) => {
+                            if (a.isRead === b.isRead) {
+                                return b.createdAt > a.createdAt ? 1 : -1;
+                            }
+                            return a.isRead ? 1 : -1;
+                        })
+                );
+                setUnreadCount(prev => prev - 1);
+            }
         } catch (error) {
             console.log(error);
         }
     };
 
-    const markAllAsRead = async () => {
-        try {
-            // const { status } = await updateAllAgentNotificationStatus({ status: true });
-            // if (status === 200) {
-            //     setNotifications(notifications.map(notif => ({ ...notif, isRead: true })));
-            //     setUnreadCount(0);
-            // }
-        } catch (error) {
-            console.log(error);
-        }
-    };
+    // const markAllAsRead = async () => {
+    //     try {
+    //         // const { status } = await updateAllAgentNotificationStatus({ status: true });
+    //         // if (status === 200) {
+    //         //     setNotifications(notifications.map(notif => ({ ...notif, isRead: true })));
+    //         //     setUnreadCount(0);
+    //         // }
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // };
 
     const toggleDescription = (id: number) => {
         setExpandedNotifications(prev =>
@@ -105,8 +106,8 @@ export const Notifications = () => {
     useEffect(() => {
         const initNotifications = async () => {
             try {
-                // const { notifications } = await fetchAgentNotifications();
-                // setNotifications(notifications);
+                const { data } = await getContriNotification() as unknown as any;
+                setNotifications(data);
             } catch (error) {
                 console.log(error);
             }
@@ -128,19 +129,19 @@ export const Notifications = () => {
                 <Card className="absolute z-50 mt-2 shadow-lg md:right-0 top-full w-80">
                     <CardHeader className="flex flex-row items-center justify-between px-4 py-2">
                         <CardTitle className="text-base font-semibold">Notifications</CardTitle>
-                        {unreadCount > 0 && (
+                        {/* {unreadCount > 0 && (
                             <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-8 text-xs">
                                 <CheckCheck className="w-3 h-3 mr-1" />
                                 Mark all as read
                             </Button>
-                        )}
+                        )} */}
                     </CardHeader>
                     <CardContent className="p-0">
                         <ScrollArea className="h-[300px]">
                             <div>
                                 {notifications.map((notification) => (
                                     <div
-                                        key={notification.id}
+                                        key={notification._id}
                                         className={`flex flex-col p-4 ${
                                             notification.isRead ? 'bg-background' : 'bg-accent'
                                         } hover:bg-accent transition-colors`}
@@ -155,17 +156,17 @@ export const Notifications = () => {
                                             ) : (
                                                 <>
                                                     <p className="text-sm text-muted-foreground">
-                                                        {expandedNotifications.includes(notification.id)
+                                                        {expandedNotifications.includes(notification._id)
                                                             ? notification.description
                                                             : `${notification.description.slice(0, 100)}...`}
                                                     </p>
                                                     <Button
                                                         variant="link"
                                                         size="sm"
-                                                        onClick={() => toggleDescription(notification.id)}
+                                                        onClick={() => toggleDescription(notification._id)}
                                                         className="h-auto p-0 text-xs text-primary"
                                                     >
-                                                        {expandedNotifications.includes(notification.id) ? (
+                                                        {expandedNotifications.includes(notification._id) ? (
                                                             <>
                                                                 View less
                                                                 <ChevronUp className="w-3 h-3 ml-1" />
@@ -185,22 +186,13 @@ export const Notifications = () => {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => markAsRead(notification.id)}
+                                                    onClick={() => markAsRead(notification._id)}
                                                     className="h-8 text-xs"
                                                 >
                                                     <Check className="w-3 h-3 mr-1" />
                                                     Mark as read
                                                 </Button>
                                             )}
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => navigate(notification.routeRedirect)}
-                                                className="h-8 ml-auto text-xs"
-                                            >
-                                                View
-                                                <ChevronRight className="w-3 h-3 ml-1" />
-                                            </Button>
                                         </div>
                                     </div>
                                 ))}
@@ -208,9 +200,6 @@ export const Notifications = () => {
                         </ScrollArea>
                     </CardContent>
                     <CardFooter className="p-4">
-                        <Button className="w-full" onClick={() => navigate('profile/notifications')}>
-                            View All Notifications
-                        </Button>
                     </CardFooter>
                 </Card>
             )}

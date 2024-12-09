@@ -190,3 +190,30 @@ export const updateUserSetting = (data:any) => {
       });
   });
 };
+
+//Notification
+export const getContriNotification = () => {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(`${import.meta.env.VITE_API_URL}/notifications`, dataHeader())
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};
+
+export const updateNotification = (id:string, data:any) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .put(`${import.meta.env.VITE_API_URL}/notifications/${id}`, data, dataHeader())
+      .then((res:any) => {
+        resolve(res);
+      })
+      .catch((err:any) => {
+        reject(err);
+      });
+  });
+};

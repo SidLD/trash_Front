@@ -1,8 +1,8 @@
 import React, { useContext } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { HomeContext } from '../view'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Legend } from 'recharts'
-import { HomeContext } from '../view'
 
 interface CustomCurveChartProps {
   onClick: () => void
