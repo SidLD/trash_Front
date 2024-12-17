@@ -24,7 +24,7 @@ export const Notifications = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [expandedNotifications, setExpandedNotifications] = useState<number[]>([]);
     const [socket, setSocket] = useState<Socket | null>(null);
-
+    const token = auth.getToken();
     useEffect(() => {
         if (notifications) {
             setUnreadCount(notifications.filter(n => !n.isRead).length);
@@ -32,8 +32,9 @@ export const Notifications = () => {
     }, [notifications]);
 
     useEffect(() => {
-        const newSocket = io(`${import.meta.env.VITE_API_URL}`, {
-            transports: ["websocket"]
+           const newSocket = io(`${import.meta.env.VITE_API_URL}`, {
+            auth: { token },
+            withCredentials: true,
           })
           setSocket(newSocket)
           console.log(newSocket)

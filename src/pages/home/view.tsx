@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { getStat } from '@/lib/api'
 import { FileText, Popcorn, PhilippinePeso } from 'lucide-react'
+import { auth } from '@/lib/services'
 
 export interface FoodWasteData {
   _id: string
@@ -188,9 +189,8 @@ export function HomeView(): JSX.Element {
     void initData()
 
     const newSocket = io(`${import.meta.env.VITE_API_URL}`, {
-      transports: ["websocket", "polling"],
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      auth: { token:auth.getToken() },
+      withCredentials: true,
     })
     setSocket(newSocket)
     console.log(newSocket)
