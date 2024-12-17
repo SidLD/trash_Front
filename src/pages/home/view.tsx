@@ -188,7 +188,9 @@ export function HomeView(): JSX.Element {
     void initData()
 
     const newSocket = io(`${import.meta.env.VITE_API_URL}`, {
-      transports: ["websocket"]
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     })
     setSocket(newSocket)
     console.log(newSocket)
