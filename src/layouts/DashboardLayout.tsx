@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { Home, Users, FileInput, LogOut, Menu, X, Settings2, ClipboardMinus } from 'lucide-react';
+import { Home, Users, FileInput, LogOut, Menu, X, Settings2 } from 'lucide-react';
 import { auth } from "@/lib/services";
 import { Notifications } from './_components/notifications';
 import { Button } from "@/components/ui/button";
@@ -51,12 +51,12 @@ export default function DashboardLayout() {
       title: "Settings",
       roles: ['CONTRIBUTOR']
     },
-    {
-      link:'/admin/report',
-      icon: <ClipboardMinus size={20} />,
-      title: "Report",
-      roles: ['ADMIN']
-    },
+    // {
+    //   link:'/admin/report',
+    //   icon: <ClipboardMinus size={20} />,
+    //   title: "Report",
+    //   roles: ['ADMIN']
+    // },
   ]
   const handleLogout = () => {
     auth.clear()

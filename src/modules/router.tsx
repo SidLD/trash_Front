@@ -21,6 +21,7 @@ const routers = createBrowserRouter(
                 <Route  path="/login" element={<Login />} />
                 <Route  path="/sign-up" element={<SignUp />} />
                 <Route  path="/about" element={<AboutUs />} />
+                <Route  path="/report"  element={<FoodWasteReport />}/>
                 <Route  path="*" element={<Navigate to="/" replace />} />
             </Route>  
             <Route element={<PrivateLayout/>} >

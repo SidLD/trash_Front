@@ -26,6 +26,12 @@ export default function GuestLayout() {
                 About Us
               </Link>
               <Link
+                to="/report"
+                className="px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-gray-900"
+              >
+                Report
+              </Link>
+              <Link
                 to="/login"
                 className="px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-gray-900"
               >
